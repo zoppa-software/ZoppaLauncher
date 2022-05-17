@@ -14,7 +14,7 @@ namespace ZoppaShortcutLibrary {
 		_hcount(5),
 		_foreColor(Color::FromArgb(255, 250, 250, 250)),
 		_backColor(Color::FromArgb(255, 26, 119, 189)),
-		_accentColor(Color::FromArgb(50, 250, 250, 250))
+		_accentColor(Color::FromArgb(255, 250, 250, 250))
 	{}
 
 	IconCollection^ IconCollection::Load(Xml::XmlDocument^ doc) {

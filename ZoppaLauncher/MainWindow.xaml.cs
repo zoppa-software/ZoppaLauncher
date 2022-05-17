@@ -13,6 +13,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -33,6 +34,8 @@ namespace ZoppaLauncher
         private CellsTblInformation _cellCollection;
 
         private NowTime _nowTime;
+
+        private bool _hitAnimaflg;
 
         public MainWindow()
         {
@@ -63,9 +66,31 @@ namespace ZoppaLauncher
             try {
                 this._iconSetting = await this.LoadSettingFile();
                 if (this._iconSetting != null) {
+                    this.Resources["foreColor"] = new SolidColorBrush(this._iconSetting.ForeColor);
+
                     this._cellCollection.BackColor = new SolidColorBrush(this._iconSetting.BackColor);
+
+                    var style0 = this.FindResource("hoverAction") as Style;
+                    var b = ((style0?.Triggers[0].EnterActions[0] as BeginStoryboard)?.Storyboard.Children[0] as ColorAnimationUsingKeyFrames)?.KeyFrames[1];
+                    if (b != null) {
+                        b.Value = Color.FromArgb(80, this._iconSetting.AccentColor.R, this._iconSetting.AccentColor.G, this._iconSetting.AccentColor.B);
+                    }
+
+                    var style1 = this.FindResource("hoverBarAction") as Style;
+                    var a = ((style1?.Triggers[0].EnterActions[0] as BeginStoryboard)?.Storyboard.Children[0] as ColorAnimationUsingKeyFrames)?.KeyFrames[1];
+                    if (a != null) {
+                        a.Value = this._iconSetting.AccentColor;
+                    }
+                    
                     this.CurrentPage = 0;
                 }
+                else {
+                    this._iconSetting = new IconCollection();
+                }
+
+                this.hiddenBtn.Style = this.FindResource("hoverAction") as Style;
+                this.contAdminRun.Style = this.FindResource("hoverAction") as Style;
+                this.contDelBtn.Style = this.FindResource("hoverAction") as Style;
 
                 await Dispatcher.BeginInvoke(
                     () => { 
@@ -126,26 +151,46 @@ namespace ZoppaLauncher
             }
         }
 
-        private void IconFrame_MouseUp(object sender, MouseButtonEventArgs e)
+        private async void IconFrame_MouseUp(object sender, MouseButtonEventArgs e)
         {
             try {
                 if (this.cellControl.IsSelectedIcon &&
                     this.cellControl.StayMousePosition(e.GetPosition(this.cellControl))) {
                     var icon = (e.Source as FrameworkElement)?.DataContext as CellInformation;
                     if (icon?.LinkPath != null) {
-                        var linkInfo = new ProcessStartInfo();
-                        linkInfo.FileName = icon.LinkPath;
-                        linkInfo.UseShellExecute = true;
-                        Process.Start(linkInfo);
+                        var sb = this.FindResource("hitAnimation") as Storyboard;
+                        if (sb != null) {
+                            sb.Children.ToList().ForEach(child => {
+                                Storyboard.SetTarget(child, (e.Source as FrameworkElement)?.Parent);
+                            });
 
-                        this.WindowState = WindowState.Minimized;
-                        this.cellControl.ClearCellInformation();
+                            this._hitAnimaflg = false;
+                            sb.Begin();
+                            await Task.Run(() => {
+                                while(!this._hitAnimaflg) {
+                                    System.Threading.Thread.Sleep(100);
+                                }
+                            });
+
+                            var linkInfo = new ProcessStartInfo();
+                            linkInfo.FileName = icon.LinkPath;
+                            linkInfo.UseShellExecute = true;
+                            Process.Start(linkInfo);
+
+                            this.WindowState = WindowState.Minimized;
+                            this.cellControl.ClearCellInformation();
+                        }
                     }
                 }
             }
             catch (Exception ex) {
                 Debug.WriteLine($"{nameof(this.IconFrame_MouseUp)}:{ex.ToString()}");
             }
+        }
+
+        private void hitAnimation_Completed(object sender, EventArgs e)
+        {
+            this._hitAnimaflg = true;
         }
 
         private void hiddenBtn_Click(object sender, RoutedEventArgs e)
@@ -263,9 +308,9 @@ namespace ZoppaLauncher
         private async Task<IconCollection?> LoadSettingFile()
         {
             return await Task.Run(() => {
-                var exePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                
-                foreach (var path in new string[] { $"{exePath}\\setting.xml", $"{exePath}\\setting_back.xml" }) {
+                foreach (var path in new string[] { 
+                            $"{this.SettingPath}\\setting.xml", 
+                            $"{this.SettingPath}\\setting_back.xml" }) {
                     var setFile = new FileInfo(path);
                     if (setFile.Exists) {
                         var doc = new System.Xml.XmlDocument();
@@ -279,14 +324,14 @@ namespace ZoppaLauncher
 
         private async void UpdateSettingFile()
         {
-            var exePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-
-            var setFile = new FileInfo($"{exePath}\\setting.xml");
-            var backFile = new FileInfo($"{exePath}\\setting_back.xml");
+            var setFile = new FileInfo($"{this.SettingPath}\\setting.xml");
+            var backFile = new FileInfo($"{this.SettingPath}\\setting_back.xml");
 
             await Task.Run(() => {
                 if (this._iconSetting != null) {
-                    setFile.CopyTo(backFile.FullName, true);
+                    if (setFile.Exists) {
+                        setFile.CopyTo(backFile.FullName, true);
+                    }
 
                     var doc = this._iconSetting?.Save();
                     doc?.Save(setFile.FullName);
@@ -309,6 +354,17 @@ namespace ZoppaLauncher
 
         private int CurrentPage {
             get; set; 
+        }
+
+        private string SettingPath {
+            get {
+                var appPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var dirInto = new DirectoryInfo($"{appPath}\\ZoppaLauncher");
+                if (!dirInto.Exists) {
+                    dirInto.Create();
+                }
+                return dirInto.FullName;
+            }
         }
     }
 }

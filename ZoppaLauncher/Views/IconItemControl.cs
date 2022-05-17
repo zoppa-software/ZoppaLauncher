@@ -99,8 +99,8 @@ namespace ZoppaLauncher.Views
             base.OnMouseMove(e);
 
             // クリック位置より大きな動きがあれば入れ替え、削除コーストを作成
-            if (this._clickPoint != null && this._selectedIcon != null && this._dragGhost == null && 
-                    !this.StayMousePosition(e.GetPosition(this))) {
+            if (this._clickPoint != null && this._selectedIcon?.LinkPath != null && 
+                this._dragGhost == null && !this.StayMousePosition(e.GetPosition(this))) {
                 this._dragGhost = new DragFileGhost(this, IconInformation.Load(MOVE_TAG, this._selectedIcon.LinkPath ));
                 this.Layer.Add(this._dragGhost);
                 this._clickPoint = null;

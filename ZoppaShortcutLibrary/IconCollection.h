@@ -40,11 +40,10 @@ namespace ZoppaShortcutLibrary {
 		// ウィンドウカラー
 		Color _foreColor, _backColor, _accentColor;
 
-	private:
+	public:
 		/// <summary>コンストラクタ。</summary>
 		IconCollection();
 
-	public:
 		/// <summary>設定ファイルを読み込む。</summary>
 		/// <param name="doc">XMLドキュメント。</param>
 		/// <returns>アイコンコレクション。</returns>
