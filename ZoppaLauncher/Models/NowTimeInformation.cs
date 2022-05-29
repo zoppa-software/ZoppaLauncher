@@ -5,7 +5,7 @@ using System.Windows.Threading;
 namespace ZoppaLauncher.Models
 {
     /// <summary>現在時刻情報。</summary>
-    public sealed class NowTime : INotifyPropertyChanged
+    public sealed class NowTimeInformation : INotifyPropertyChanged
     {
         /// <summary>プロパティ変更イベントです。</summary>
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -14,7 +14,7 @@ namespace ZoppaLauncher.Models
         private DispatcherTimer _timer;
 
         /// <summary>コンストラクタ。</summary>
-        public NowTime()
+        public NowTimeInformation()
         {
             this._timer = new DispatcherTimer();
             this._timer.Tick += new EventHandler(Timer_Tick);

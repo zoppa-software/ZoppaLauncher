@@ -6,8 +6,8 @@ namespace ZoppaShortcutLibrary {
 	using namespace System::Collections::Generic;
 
 	/// <summary>アイコン位置情報。</summary>
-	public ref class IconPosition sealed :
-		IComparable<IconPosition^>
+	public ref class LauncherPosition sealed :
+		IComparable<LauncherPosition^>
 	{
 	private:
 		// ページ
@@ -28,13 +28,13 @@ namespace ZoppaShortcutLibrary {
 		/// <param name="row">行。</param>
 		/// <param name="column">列。</param>
 		/// <param name="index">アイコンインデックス。</param>
-		IconPosition(int page, int row, int column, int index);
+		LauncherPosition(int page, int row, int column, int index);
 
 	public:
 		/// <summary>比較処理。</summary>
 		/// <param name="other">比較対象。</param>
 		/// <returns>比較結果。</returns>
-		virtual int CompareTo(IconPosition^ other);
+		virtual int CompareTo(LauncherPosition^ other);
 
 		/// <summary>ページインデックスを -1 する。</summary>
 		void DecrementPage() {

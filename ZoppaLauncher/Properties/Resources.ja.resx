@@ -123,6 +123,9 @@
   <data name="Menu_Del" xml:space="preserve">
     <value>削除</value>
   </data>
+  <data name="Menu_OpenPath" xml:space="preserve">
+    <value>ファイルの場所を開く</value>
+  </data>
   <data name="Menu_RunAs" xml:space="preserve">
     <value>管理者として実行</value>
   </data>

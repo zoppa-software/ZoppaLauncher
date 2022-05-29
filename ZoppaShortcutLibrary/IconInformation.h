@@ -10,6 +10,17 @@ namespace ZoppaShortcutLibrary {
 		IDisposable
 	{
 	private:
+		/// <summary>ファイル情報。</summary>
+		ref class FileResult {
+		public:
+			/// <summary>表示名。</summary>
+			String^ name;
+
+			/// <summary>アイコン画像。</summary>
+			ImageSource^ image;
+		};
+
+	private:
 		// 名前
 		String^ _name;
 
@@ -37,7 +48,6 @@ namespace ZoppaShortcutLibrary {
 		static IconInformation^ Create(String^ path, String^ linkStockFolder);
 
 		/// <summary>アイコン情報を読み込む。</summary>
-		/// <param name="name">アイコン名。</param>
 		/// <param name="path">アイコンパス。</param>
 		/// <returns>アイコン情報。</returns>
 		static IconInformation^ Load(String^  name, String^ path);
@@ -48,11 +58,11 @@ namespace ZoppaShortcutLibrary {
 		/// <param name="srcPath">作成元の実行ファイルパス。</param>
 		static void CreateShortcut(String^ linkPath, String^ srcPath);
 
-		/// <summary>アイコン画像イメージを取得する。</summary>
+		/// <summary>ファイル情報を取得する。</summary>
 		/// <param name="path">ショートカットパス。</param>
 		/// <param name="size">画像サイズ。</param>
-		/// <returns>画像イメージ。</returns>
-		static ImageSource^ GetIconImage(String^ path, int size);
+		/// <returns>ファイル情報。</returns>
+		static FileResult^ GetIconImage(String^ path, int size);
 
 	public:
 		/// <summary>アイコン名を取得する。</summary>

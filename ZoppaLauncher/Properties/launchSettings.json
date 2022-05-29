@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ZoppaLauncher": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

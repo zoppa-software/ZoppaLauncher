@@ -1,13 +1,13 @@
 #include "pch.h"
-#include "IconPosition.h"
+#include "LauncherPosition.h"
 
 namespace ZoppaShortcutLibrary {
 
-	IconPosition::IconPosition(int page, int row, int column, int index) :
+	LauncherPosition::LauncherPosition(int page, int row, int column, int index) :
 		_page(page), _row(row), _column(column), _index(index)
 	{}
 
-	int IconPosition::CompareTo(IconPosition^ other) {
+	int LauncherPosition::CompareTo(LauncherPosition^ other) {
 		for (int i = 0; i < 3; ++i) {
 			int l = this->GetOrder(i);
 			int r = other->GetOrder(i);
@@ -18,7 +18,7 @@ namespace ZoppaShortcutLibrary {
 		return 0;
 	}
 
-	int IconPosition::GetOrder(int index) {
+	int LauncherPosition::GetOrder(int index) {
 		switch (index)
 		{
 		case 0:

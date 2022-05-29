@@ -8,17 +8,17 @@ namespace ZoppaShortcutLibrary {
 
 	ref class PageTitle;
 	ref class IconInformation;
-	ref class IconPosition;
+	ref class LauncherPosition;
 
 	/// <summary>アイコンコレクション。</summary>
-	public ref class IconCollection sealed
+	public ref class LauncherCollection sealed
 	{
 	public:
 		/// <summary>位置とアイコン情報のペア。</summary>
 		ref struct IconPair {
 		public:
 			/// <summary>位置情報。</summary>
-			IconPosition^ position;
+			LauncherPosition^ position;
 
 			/// <summary>アイコン情報。</summary>
 			IconInformation^ informatition;
@@ -32,7 +32,7 @@ namespace ZoppaShortcutLibrary {
 		Dictionary<int, IconInformation^>^ _icons;
 
 		// 位置情報リスト
-		List<IconPosition^>^ _positions;
+		List<LauncherPosition^>^ _positions;
 
 		// 縦横アイコン数
 		int _wcount, _hcount;
@@ -42,12 +42,12 @@ namespace ZoppaShortcutLibrary {
 
 	public:
 		/// <summary>コンストラクタ。</summary>
-		IconCollection();
+		LauncherCollection();
 
 		/// <summary>設定ファイルを読み込む。</summary>
 		/// <param name="doc">XMLドキュメント。</param>
 		/// <returns>アイコンコレクション。</returns>
-		static IconCollection^ Load(Xml::XmlDocument^ doc);
+		static LauncherCollection^ Load(Xml::XmlDocument^ doc);
 
 	public:
 		/// <summary>XMLドキュメントに保存する。</summary>
@@ -70,7 +70,7 @@ namespace ZoppaShortcutLibrary {
 
 		/// <summary>指定ページのアイコン情報リストを取得する。</summary>
 		/// <returns>アイコン情報リスト。</returns>
-		List<IconCollection::IconPair^>^ Collect(int page);
+		List<LauncherCollection::IconPair^>^ Collect(int page);
 
 		/// <summary>指定位置の情報を削除する。</summary>
 		/// <param name="page">ページ。</param>
@@ -82,7 +82,7 @@ namespace ZoppaShortcutLibrary {
 		/// <summary>指定位置以上の位置を検索する。</summary>
 		/// <param name="key">指定位置。</param>
 		/// <returns>指定位置以上の位置。</returns>
-		int SearchPosition(IconPosition^ key);
+		int SearchPosition(LauncherPosition^ key);
 
 		/// <summary>入力文字列を色へ変換する。</summary>
 		/// <param name="inpstr">入力文字列。</param>

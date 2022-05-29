@@ -7,32 +7,26 @@ using ZoppaShortcutLibrary;
 
 namespace ZoppaLauncher.Models
 {
-    /// <summary>セル配置情報。</summary>
-    public sealed class CellsTblInformation : INotifyPropertyChanged
+    /// <summary>画面情報。</summary>
+    public sealed class LauncherForm : INotifyPropertyChanged
     {
-        /// <summary>セルサイズです。</summary>
-        public const int CELL_SIZE = 96;
-
         /// <summary>プロパティ変更イベントです。</summary>
         public event PropertyChangedEventHandler? PropertyChanged;
 
         // セル情報コレクション
         private ObservableCollection<CellInformation> _cells;
 
-        // セルピクセルサイズ（横、縦）
-        private int _cwidth, _cheight;
-
         // ページコレクション
-        private ObservableCollection<PageInformation> _pages;
+        private ObservableCollection<PageBarInformation> _pages;
 
         // 背景色
         private Brush _color;
 
         /// <summary>コンストラクタ。</summary>
-        public CellsTblInformation()
+        public LauncherForm()
         {
             this._cells = new ObservableCollection<CellInformation>();
-            this._pages = new ObservableCollection<PageInformation>();
+            this._pages = new ObservableCollection<PageBarInformation>();
             this._color = new SolidColorBrush(Color.FromRgb(26, 119, 189));
         }
 
@@ -43,7 +37,7 @@ namespace ZoppaLauncher.Models
         /// <param name="hcount">行セル数。</param>
         /// <param name="iconPairs">アイコン情報リスト。</param>
         public void SetPage(int page, int pageMax, 
-            int wcount, int hcount, List<IconCollection.IconPair> iconPairs)
+            int wcount, int hcount, List<LauncherCollection.IconPair> iconPairs)
         {
             // セルマップを作成
             this._cells.Clear();
@@ -66,19 +60,15 @@ namespace ZoppaLauncher.Models
                 );
             }
 
-            // セルサイズを設定
-            this.CellWidth = CELL_SIZE;
-            this.CellHeight = CELL_SIZE;
-
             // ページを設定
             this._pages.Clear();
             for (int i = 0; i <= pageMax; ++i) {
-                this._pages.Add(new PageInformation(i, i == page));
+                this._pages.Add(new PageBarInformation(i, i == page));
             }
 
             // 変更を通知
-            this.OnPropertyChanged("Cells");
-            this.OnPropertyChanged("Pages");
+            this.OnPropertyChanged(nameof(this.Cells));
+            this.OnPropertyChanged(nameof(this.Pages));
         }
 
         /// <summary>プロパティ変更イベントの発行を行います。</summary>
@@ -98,34 +88,10 @@ namespace ZoppaLauncher.Models
         }
 
         /// <summary>ページコレクションを取得します。</summary>
-        public ObservableCollection<PageInformation> Pages {
+        public ObservableCollection<PageBarInformation> Pages {
             get { return this._pages; }
             private set {
                 this._pages = value;
-                this.OnPropertyChanged();
-            }
-        }
-
-        /// <summary>セル幅（ピクセル）を取得します。</summary>
-        public int CellWidth {
-            get { return this._cwidth; } 
-            set {
-                this._cwidth = value;
-                foreach (var icn in this._cells) {
-                    icn.Width = value;
-                }
-                this.OnPropertyChanged();
-            }
-        }
-
-        /// <summary>セル高さ（ピクセル）を取得します。</summary>
-        public int CellHeight {
-            get { return this._cheight; }
-            set {
-                this._cheight = value;
-                foreach (var icn in this._cells) {
-                    icn.Height = value;
-                }
                 this.OnPropertyChanged();
             }
         }

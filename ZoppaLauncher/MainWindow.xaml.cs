@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,6 +18,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ZoppaLauncher.Logs;
 using ZoppaLauncher.Models;
 using ZoppaShortcutLibrary;
 
@@ -27,20 +29,21 @@ namespace ZoppaLauncher
     /// </summary>
     public partial class MainWindow : Window
     {
-        public const string LINK_STOCK_PATH = "links";
+        private LauncherCollection? _iconSetting;
 
-        private IconCollection? _iconSetting;
+        private LauncherForm _cellCollection;
 
-        private CellsTblInformation _cellCollection;
+        private NowTimeInformation _nowTime;
 
-        private NowTime _nowTime;
+        private ILogWriter _logWriter;
 
         private bool _hitAnimaflg;
 
         public MainWindow()
         {
-            this._cellCollection = new CellsTblInformation();
-            this._nowTime = new NowTime();
+            this._cellCollection = new LauncherForm();
+            this._nowTime = new NowTimeInformation();
+            this._logWriter = new LogWriter();
 
             InitializeComponent();
 
@@ -48,15 +51,27 @@ namespace ZoppaLauncher
             this.nowTimeLabel.DataContext = this._nowTime;
         }
 
-        public MainWindow(CellsTblInformation? collection, NowTime? nowTime)
+        public MainWindow(LauncherForm? collection, NowTimeInformation? nowTime, ILogWriter? logger)
         {
-            this._cellCollection = collection ?? new CellsTblInformation();
-            this._nowTime = nowTime ?? new NowTime();
+            this._cellCollection = collection ?? new LauncherForm();
+            this._nowTime = nowTime ?? new NowTimeInformation();
+            this._logWriter = logger ?? new LogWriter();
 
             InitializeComponent();
 
             this.DataContext = this._cellCollection;
             this.nowTimeLabel.DataContext = this._nowTime;
+        }
+
+        private void WriteLog(string message, [CallerMemberName] string memberName = "")
+        {
+            this._logWriter.Write($"[{this.GetType().Name}.{memberName}] {message}");
+        }
+
+        private void WriteErrorLog(Exception ex, [CallerMemberName] string memberName = "")
+        {
+            this._logWriter.Write($"[{this.GetType().Name}.{memberName}] error!:{ex.ToString()}");
+            this._logWriter.Write(ex.StackTrace ?? "");
         }
 
         protected override async void OnInitialized(EventArgs e)
@@ -64,33 +79,29 @@ namespace ZoppaLauncher
             base.OnInitialized(e);
 
             try {
+                this.WriteLog("start");
+
                 this._iconSetting = await this.LoadSettingFile();
                 if (this._iconSetting != null) {
+                    this.WriteLog("load setting");
                     this.Resources["foreColor"] = new SolidColorBrush(this._iconSetting.ForeColor);
-
                     this._cellCollection.BackColor = new SolidColorBrush(this._iconSetting.BackColor);
-
-                    var style0 = this.FindResource("hoverAction") as Style;
-                    var b = ((style0?.Triggers[0].EnterActions[0] as BeginStoryboard)?.Storyboard.Children[0] as ColorAnimationUsingKeyFrames)?.KeyFrames[1];
-                    if (b != null) {
-                        b.Value = Color.FromArgb(80, this._iconSetting.AccentColor.R, this._iconSetting.AccentColor.G, this._iconSetting.AccentColor.B);
-                    }
-
-                    var style1 = this.FindResource("hoverBarAction") as Style;
-                    var a = ((style1?.Triggers[0].EnterActions[0] as BeginStoryboard)?.Storyboard.Children[0] as ColorAnimationUsingKeyFrames)?.KeyFrames[1];
-                    if (a != null) {
-                        a.Value = this._iconSetting.AccentColor;
-                    }
-                    
-                    this.CurrentPage = 0;
+                    this.SetHoverAminationColor("hoverAction", 80, this._iconSetting.AccentColor);
+                    this.SetHoverAminationColor("hoverBarAction", 255, this._iconSetting.AccentColor);
+                    this.CurrentPage = await this.LoadCurrentPage();
                 }
                 else {
-                    this._iconSetting = new IconCollection();
+                    this.WriteLog("create default setting");
+                    this._iconSetting = new LauncherCollection();
+                    this.CurrentPage = 0;
                 }
 
-                this.hiddenBtn.Style = this.FindResource("hoverAction") as Style;
-                this.contAdminRun.Style = this.FindResource("hoverAction") as Style;
-                this.contDelBtn.Style = this.FindResource("hoverAction") as Style;
+                // マウスホバースタイルの割り当て
+                foreach (Rectangle rec in new Rectangle[] { 
+                    this.hiddenBtn , this.contAdminRun, this.contDelBtn, this.contOpenBtn 
+                }) {
+                    rec.Style = this.FindResource("hoverAction") as Style;
+                }
 
                 await Dispatcher.BeginInvoke(
                     () => { 
@@ -99,8 +110,17 @@ namespace ZoppaLauncher
                     System.Windows.Threading.DispatcherPriority.Loaded
                 );
             }
-            catch (Exception ex) { 
-                Debug.WriteLine($"{nameof(this.OnInitialized)}:{ex.ToString()}");
+            catch (Exception ex) {
+                this.WriteErrorLog(ex);
+            }
+        }
+
+        private void SetHoverAminationColor(string storyName, byte transLv, Color hcolor)
+        {
+            var style = this.FindResource(storyName) as Style;
+            var frame = ((style?.Triggers[0].EnterActions[0] as BeginStoryboard)?.Storyboard.Children[0] as ColorAnimationUsingKeyFrames)?.KeyFrames[1];
+            if (frame != null) {
+                frame.Value = Color.FromArgb(transLv, hcolor.R, hcolor.G, hcolor.B);
             }
         }
 
@@ -110,7 +130,7 @@ namespace ZoppaLauncher
                 this.cellMenuPop.IsOpen = false;
             }
             catch (Exception ex) {
-                Debug.WriteLine($"{nameof(this.OnDeactivated)}:{ex.ToString()}");
+                this.WriteErrorLog(ex);
             }
         }
 
@@ -124,7 +144,7 @@ namespace ZoppaLauncher
                 }
             }
             catch (Exception ex) {
-                Debug.WriteLine($"{nameof(this.OnMouseDown)}:{ex.ToString()}");
+                this.WriteErrorLog(ex);
             }
         }
 
@@ -147,7 +167,7 @@ namespace ZoppaLauncher
                 }
             }
             catch (Exception ex) {
-                Debug.WriteLine($"{nameof(this.IconFrame_MouseDown)}:{ex.ToString()}");
+                this.WriteErrorLog(ex);
             }
         }
 
@@ -206,7 +226,7 @@ namespace ZoppaLauncher
         private async void cellControl_DropLinkFile(object sender, CellInformation toCell, string linkPath)
         {
             try {
-                var newIcon = await Task.Run(() => { return IconInformation.Create(linkPath, LINK_STOCK_PATH); });
+                var newIcon = await Task.Run(() => { return IconInformation.Create(linkPath, App.StockPath); });
 
                 if (this._iconSetting?.UsedPosition(this.CurrentPage, toCell.Row, toCell.Column) ?? false) {
                     this._iconSetting?.Remove(this.CurrentPage, toCell.Row, toCell.Column);
@@ -224,7 +244,7 @@ namespace ZoppaLauncher
         private async void cellControl_MoveIcon(object sender, CellInformation fromCell, CellInformation toCell, string linkPath)
         {
             try {
-                var newIcon = await Task.Run(() => { return IconInformation.Create(linkPath, LINK_STOCK_PATH); });
+                var newIcon = await Task.Run(() => { return IconInformation.Create(linkPath, App.StockPath); });
 
                 this._iconSetting?.Remove(fromCell.Page, fromCell.Row, fromCell.Column);
                 if (this._iconSetting?.UsedPosition(this.CurrentPage, toCell.Row, toCell.Column) ?? false) {
@@ -255,14 +275,13 @@ namespace ZoppaLauncher
 
         private void Page_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            var page = (e.Source as FrameworkElement)?.DataContext as PageInformation;
+            var page = (e.Source as FrameworkElement)?.DataContext as PageBarInformation;
             try {
                 if (page != null) {
                     this.CurrentPage = page.Index;
                     this.SetPage();
                 }
-
-                this.UpdateSettingFile();
+                this.UpdateCurrentPage();
             }
             catch (Exception ex) {
                 Debug.WriteLine($"{nameof(this.Page_MouseLeftButtonUp)}:{ex.ToString()}");
@@ -305,17 +324,33 @@ namespace ZoppaLauncher
             }
         }
 
-        private async Task<IconCollection?> LoadSettingFile()
+        private void OpenLocation_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var icon = (e.Source as FrameworkElement)?.DataContext as CellInformation;
+            try {
+                if (icon?.LinkPath != null) {
+                    var path = new FileInfo(icon.LinkPath);
+                    if (path.Directory != null) {
+                        Process.Start("explorer.exe", path.Directory.FullName);
+                    }
+                }
+            }
+            catch (Exception ex) {
+                Debug.WriteLine($"{nameof(this.OpenLocation_MouseDown)}:{ex.ToString()}");
+            }
+        }
+
+        private async Task<LauncherCollection?> LoadSettingFile()
         {
             return await Task.Run(() => {
                 foreach (var path in new string[] { 
-                            $"{this.SettingPath}\\setting.xml", 
-                            $"{this.SettingPath}\\setting_back.xml" }) {
+                            $"{App.SettingPath}\\setting.xml", 
+                            $"{App.SettingPath}\\setting_back.xml" }) {
                     var setFile = new FileInfo(path);
                     if (setFile.Exists) {
                         var doc = new System.Xml.XmlDocument();
                         doc.Load(setFile.FullName);
-                        return IconCollection.Load(doc);
+                        return LauncherCollection.Load(doc);
                     }
                 }
                 return null;
@@ -324,8 +359,8 @@ namespace ZoppaLauncher
 
         private async void UpdateSettingFile()
         {
-            var setFile = new FileInfo($"{this.SettingPath}\\setting.xml");
-            var backFile = new FileInfo($"{this.SettingPath}\\setting_back.xml");
+            var setFile = new FileInfo($"{App.SettingPath}\\setting.xml");
+            var backFile = new FileInfo($"{App.SettingPath}\\setting_back.xml");
 
             await Task.Run(() => {
                 if (this._iconSetting != null) {
@@ -352,19 +387,41 @@ namespace ZoppaLauncher
             }
         }
 
-        private int CurrentPage {
-            get; set; 
+        private Task<int> LoadCurrentPage()
+        {
+            return Task.Run(() => {
+                var pageFile = new FileInfo($"{App.SettingPath}\\current.txt");
+                if (pageFile.Exists) {
+                    try {
+                        string ln = "0";
+                        using (var sr = new StreamReader(pageFile.FullName)) {
+                            ln = sr.ReadToEnd();
+                        }
+                        return int.Parse(ln);
+                    }
+                    catch {
+                        return 0;
+                    }
+                }
+                else {
+                    return 0;
+                }
+            });
         }
 
-        private string SettingPath {
-            get {
-                var appPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                var dirInto = new DirectoryInfo($"{appPath}\\ZoppaLauncher");
-                if (!dirInto.Exists) {
-                    dirInto.Create();
+        private async void UpdateCurrentPage()
+        {
+            var pageFile = new FileInfo($"{App.SettingPath}\\current.txt");
+
+            await Task.Run(() => {
+                using (var sw = new StreamWriter(pageFile.FullName, false)) {
+                    sw.Write($"{this.CurrentPage}");
                 }
-                return dirInto.FullName;
-            }
+            });
+        }
+
+        private int CurrentPage {
+            get; set; 
         }
     }
 }

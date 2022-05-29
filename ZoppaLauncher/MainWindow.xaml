@@ -12,6 +12,8 @@
         Title="{x:Static properties:Resources.MainWindow_Title}" Height="569" Width="515" Background="{x:Null}">
 
     <Window.Resources>
+        <System:Double x:Key="cellSize">96</System:Double>
+        
         <FontFamily x:Key="menuFontFamily">Yu Gothic UI</FontFamily>
         <System:Double x:Key="menuFontSize">14</System:Double>
         <SolidColorBrush x:Key="foreColor" Color="#FFFAFAFA"/>
@@ -70,6 +72,7 @@
             </Style.Triggers>
         </Style>
 
+        <!-- ラベルスタイル -->
         <Style x:Key="labelStyle" TargetType="{x:Type TextBlock}" >
             <Style.Setters>
                 <Setter Property="FontSize" Value="{DynamicResource menuFontSize}" />
@@ -89,6 +92,9 @@
                 <EasingDoubleKeyFrame KeyTime="00:00:00.1500000" Value="0.9"/>
             </DoubleAnimationUsingKeyFrames>
         </Storyboard>
+        
+        <!-- ページバーコンバータ -->
+        <Views:PageBarConverter x:Key="pageBarConverter" />
     </Window.Resources>
 
     <Grid>
@@ -138,7 +144,7 @@
             <!-- セルのデザインテンプレート -->
             <Views:IconItemControl.ItemTemplate>
                 <DataTemplate>
-                    <Grid x:Name="IconButton" Width="{Binding Width}" Height="{Binding Height}" 
+                    <Grid x:Name="IconButton" Width="96" Height="96" 
                           IsHitTestVisible="True" RenderTransformOrigin="0.5, 0.5" >
                         <Grid.RenderTransform>
                             <TransformGroup>
@@ -153,7 +159,8 @@
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Image Source="{Binding Image}" Width="48" Height="48" IsHitTestVisible="False"/>
                             <TextBlock Text="{Binding Name}" Foreground="{DynamicResource foreColor}" 
-                                        IsHitTestVisible="False" Height="32" Margin="3,0,3,0" TextWrapping="WrapWithOverflow" />
+                                       IsHitTestVisible="False" Height="32" Margin="3,3,3,0" 
+                                       TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                     </Grid>
                 </DataTemplate>
@@ -180,7 +187,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border>
-                            <Grid Width="{Binding Width}" Margin="3,0,3,0">
+                            <Grid Width="{Binding IsSelect, Converter={StaticResource pageBarConverter}}" Margin="3,0,3,0">
                                 <Rectangle Fill="{DynamicResource foreColor}" RadiusX="3" RadiusY="3" Margin="2" Height="6" />
                                 <Rectangle Style="{DynamicResource hoverBarAction}" Fill="#00000000" RadiusX="5" RadiusY="5" Height="10"
                                            MouseLeftButtonUp="Page_MouseLeftButtonUp" />
@@ -210,6 +217,8 @@
                             <RowDefinition Height="auto" />
                             <RowDefinition Height="5" />
                             <RowDefinition Height="auto" />
+                            <RowDefinition Height="5" />
+                            <RowDefinition Height="auto" />
                         </Grid.RowDefinitions>
 
                         <StackPanel Orientation="Horizontal">
@@ -233,6 +242,16 @@
                             <TextBlock Margin="5" Text="{x:Static properties:Resources.Menu_Del}" Style="{Binding Mode=OneWay, Source={StaticResource labelStyle}}" />
                         </StackPanel>
                         <Rectangle x:Name="contDelBtn" Grid.Row="2" RadiusX="3" RadiusY="3" MouseDown="DeleteIcon_MouseDown" />
+
+                        <StackPanel Orientation="Horizontal" Grid.Row="4">
+                            <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="ope__icon" Width="22" Height="22" Clip="F1 M 0,0L 22,0L 22,22L 0,22L 0,0">
+                                <Path Width="12" Height="19.1943" Canvas.Left="2" Canvas.Top="2" Stretch="Fill" StrokeThickness="2" StrokeLineJoin="Round" Stroke="#FFFFFFFF" Data="F1 M 3,3L 13,5.82422L 13,20.1943L 3,17.3701L 3,3 Z "/>
+                                <Path Width="17" Height="16" Canvas.Left="2" Canvas.Top="2" Stretch="Fill" StrokeThickness="2" StrokeLineJoin="Round" Stroke="#FFFFFFFF" Data="F1 M 3,3L 18,3L 18,11.2353L 16.125,12.0588L 16.125,16.1765L 12.375,17"/>
+                            </Canvas>
+
+                            <TextBlock Margin="5" Text="{x:Static properties:Resources.Menu_OpenPath}" Style="{Binding Mode=OneWay, Source={StaticResource labelStyle}}" />
+                        </StackPanel>
+                        <Rectangle x:Name="contOpenBtn" Grid.Row="4" RadiusX="3" RadiusY="3" MouseDown="OpenLocation_MouseDown" />
                     </Grid>
                 </Border>
             </Grid>

@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "ShellHelper.h"
 #include "IconInformation.h"
 
 namespace ZoppaShortcutLibrary {
@@ -31,9 +32,7 @@ namespace ZoppaShortcutLibrary {
 		String^ newLinkPath = L"";
 		if (finfo->Extension == L".lnk") {
 			newLinkPath = dinfo->FullName + L"\\" + finfo->Name;
-			if (finfo->FullName != newLinkPath) {
-				File::Copy(finfo->FullName, newLinkPath, true);
-			}
+			ShellHelper::Copy(finfo->FullName, newLinkPath);
 		}
 		else {
 			newLinkPath = dinfo->FullName + L"\\" + sname + L".lnk";
@@ -41,14 +40,14 @@ namespace ZoppaShortcutLibrary {
 		}
 
 		// ショートカット画像を取得する
-		ImageSource^ image = GetIconImage(newLinkPath, SHIL_EXTRALARGE);
+		IconInformation::FileResult^ info = GetIconImage(newLinkPath, SHIL_EXTRALARGE);
 
-		return gcnew IconInformation(sname, newLinkPath, image);
+		return gcnew IconInformation(info->name, newLinkPath, info->image);
 	}
 
 	IconInformation^ IconInformation::Load(String^ name, String^ path) {
-		ImageSource^ image = GetIconImage(path, SHIL_EXTRALARGE);
-		return gcnew IconInformation(name, path, image);
+		IconInformation::FileResult^ info = GetIconImage(path, SHIL_EXTRALARGE);
+		return gcnew IconInformation(name, path, info->image);
 	}
 
 	void IconInformation::CreateShortcut(String^ linkPath, String^ srcPath) {
@@ -87,8 +86,8 @@ namespace ZoppaShortcutLibrary {
 		}
 	}
 
-	ImageSource^ IconInformation::GetIconImage(String^ path, int size) {
-		ImageSource^ res = nullptr;
+	IconInformation::FileResult^ IconInformation::GetIconImage(String^ path, int size) {
+		IconInformation::FileResult^ res = gcnew IconInformation::FileResult();
 
 		System::Drawing::Icon^ img = nullptr;
 		SHFILEINFO shinfo = {0};
@@ -98,7 +97,7 @@ namespace ZoppaShortcutLibrary {
 		try {
 			// アイコン情報を取得
 			pin_ptr<const wchar_t> wpath = PtrToStringChars(path);
-			if (FAILED(SHGetFileInfo(wpath, 0, &shinfo, sizeof(shinfo), SHGFI_ICON | SHGFI_LARGEICON))) {
+			if (FAILED(SHGetFileInfo(wpath, 0, &shinfo, sizeof(shinfo), SHGFI_DISPLAYNAME | SHGFI_ICON | SHGFI_LARGEICON))) {
 				throw gcnew InvalidOperationException(L"SHGetFileInfo error");
 			}
 
@@ -113,12 +112,15 @@ namespace ZoppaShortcutLibrary {
 				throw gcnew InvalidOperationException(L"GetIcon error");
 			}
 
+			// アイコン名を取得する
+			res->name = gcnew String(shinfo.szDisplayName);
+
 			// アイコン画像を取得
 			img = System::Drawing::Icon::FromHandle(IntPtr(hIcon));
-			res = System::Windows::Interop::Imaging::CreateBitmapSourceFromHIcon(
+			res->image = System::Windows::Interop::Imaging::CreateBitmapSourceFromHIcon(
 				img->Handle, Int32Rect::Empty, BitmapSizeOptions::FromEmptyOptions()
 			);
-			res->Freeze();
+			res->image->Freeze();
 
 			return res;
 

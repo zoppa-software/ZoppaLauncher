@@ -79,6 +79,15 @@ namespace ZoppaLauncher.Properties {
         }
         
         /// <summary>
+        ///   Open file location に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Menu_OpenPath {
+            get {
+                return ResourceManager.GetString("Menu_OpenPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Run as administrator に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string Menu_RunAs {

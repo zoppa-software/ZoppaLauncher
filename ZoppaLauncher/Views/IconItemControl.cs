@@ -169,7 +169,7 @@ namespace ZoppaLauncher.Views
                     // ドラッグされたファイルを調査し、対象ファイルならゴーストを表示する
                     var files = target as string[];
                     if (files != null && files.Length > 0 && 
-                        (Path.GetExtension(files[0]) == ".lnk" || Path.GetExtension(files[0]) == ".exe")) {
+                        (Path.GetExtension(files[0]).ToLower() == ".lnk" || Path.GetExtension(files[0]).ToLower() == ".exe")) {
                         e.Effects = DragDropEffects.Move;
 
                         this._dragGhost = new DragFileGhost(this, IconInformation.Load(DRAG_TAG, files[0]));
@@ -218,6 +218,23 @@ namespace ZoppaLauncher.Views
                     Debug.WriteLine($"{nameof(this.OnDrop)}:{ex.ToString()}");
                 }
             }    
+        }
+
+        /// <summary>ドラッグ・ドロップ、リーブイベント処理です。</summary>
+        /// <param name="e">イベントオブジェクト。</param>
+        protected override void OnDragLeave(DragEventArgs e)
+        {
+            if (this._dragGhost?.Name == DRAG_TAG) {
+                try {
+                    // ゴーストをレイヤーより削除
+                    this.Layer.Remove(this._dragGhost);
+                    this._dragGhost = null;
+                    this.InvalidateVisual();
+                }
+                catch (Exception ex) {
+                    Debug.WriteLine($"{nameof(this.OnDragLeave)}:{ex.ToString()}");
+                }
+            }
         }
 
         /// <summary>ゴースト描画レイヤーを取得します。</summary>

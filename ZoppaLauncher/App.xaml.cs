@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Windows;
+using ZoppaLauncher.Logs;
 using ZoppaLauncher.Models;
 using ZoppaLauncher.Views;
 
@@ -12,6 +13,9 @@ namespace ZoppaLauncher
         // DIサービス
         private ServiceCollection _diService;
 
+        // DIプロバイダ
+        private ServiceProvider? _diProvider;
+
         /// <summary>コンストラクタ。</summary>
         public App()
         {
@@ -19,11 +23,19 @@ namespace ZoppaLauncher
             this._diService = new ServiceCollection();
             this._diService.AddSingleton<MainWindow>(
                 (service) => { 
-                    return new MainWindow(service.GetService<CellsTblInformation>(), service.GetService<NowTime>()); 
+                    return new MainWindow(
+                        service.GetService<LauncherForm>(), 
+                        service.GetService<NowTimeInformation>(),
+                        service.GetService<ILogWriter>()); 
                 }
             );
-            this._diService.AddSingleton<CellsTblInformation>();
-            this._diService.AddSingleton<NowTime>();
+            this._diService.AddSingleton<LauncherForm>();
+            this._diService.AddSingleton<NowTimeInformation>();
+            this._diService.AddSingleton<ILogWriter, LogWriter>(
+                (service) => {
+                    return new LogWriter($"{LogPath}\\operation.log");
+                }
+            );
         }
 
         /// <summary>アプリケーション開始イベント。</summary>
@@ -32,7 +44,9 @@ namespace ZoppaLauncher
         {
             base.OnStartup(e);
 
-            var mainWin = this._diService.BuildServiceProvider().GetService<MainWindow>();
+            this._diProvider = this._diService.BuildServiceProvider();
+
+            var mainWin = this._diProvider.GetService<MainWindow>();
             this.MainWindow = mainWin;
             if (mainWin != null) {
                 mainWin.AjustWindowPosition();
@@ -45,6 +59,40 @@ namespace ZoppaLauncher
         protected override void OnExit(ExitEventArgs e)
         {
             base.OnExit(e);
+        }
+
+        /// <summary>アプリケーションの設定フォルダのパスを取得します。</summary>
+        public static string SettingPath {
+            get {
+                var appPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var dirInto = new System.IO.DirectoryInfo($"{appPath}\\ZoppaLauncher");
+                if (!dirInto.Exists) {
+                    dirInto.Create();
+                }
+                return dirInto.FullName;
+            }
+        }
+
+        /// <summary>アプリケーションのログフォルダのパスを取得します。</summary>
+        public static string LogPath {
+            get {
+                var dirInto = new System.IO.DirectoryInfo($"{SettingPath}\\logs");
+                if (!dirInto.Exists) {
+                    dirInto.Create();
+                }
+                return dirInto.FullName;
+            }
+        }
+
+        /// <summary>アプリケーションのショートカット保存フォルダのパスを取得します。</summary>
+        public static string StockPath {
+            get {
+                var dirInto = new System.IO.DirectoryInfo($"{SettingPath}\\links");
+                if (!dirInto.Exists) {
+                    dirInto.Create();
+                }
+                return dirInto.FullName;
+            }
         }
     }
 }

@@ -1,27 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
 namespace ZoppaLauncher.Models
 {
     /// <summary>ページ情報。</summary>
-    public sealed class PageInformation : INotifyPropertyChanged
+    public sealed class PageBarInformation : INotifyPropertyChanged
     {
         /// <summary>プロパティ変更イベントです。</summary>
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public PageInformation(int idx, bool seld)
+        /// <summary>コンストラクタ。</summary>
+        /// <param name="idx">ページインデックス。</param>
+        /// <param name="seld">選択状態。</param>
+        public PageBarInformation(int idx, bool seld)
         {
             this.Index = idx;
             this.IsSelect = seld;
-            this.Width = (seld ? 35 : 15);
 
-            this.OnPropertyChanged("Index");
-            this.OnPropertyChanged("IsSelect");
-            this.OnPropertyChanged("Width");
+            this.OnPropertyChanged(nameof(this.Index));
+            this.OnPropertyChanged(nameof(this.IsSelect));
         }
 
         /// <summary>プロパティ変更イベントの発行を行います。</summary>
@@ -31,11 +27,10 @@ namespace ZoppaLauncher.Models
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
+        /// <summary>ページインデックスを取得する。</summary>
         public int Index { get; }
 
+        /// <summary>選択状態を取得する。</summary>
         public bool IsSelect { get; }
-
-        public int Width { get; }
-
     }
 }

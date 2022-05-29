@@ -1,24 +1,24 @@
 #include "pch.h"
 #include "PageTitle.h"
 #include "IconInformation.h"
-#include "IconPosition.h"
-#include "IconCollection.h"
+#include "LauncherPosition.h"
+#include "LauncherCollection.h"
 
 namespace ZoppaShortcutLibrary {
 
-	IconCollection::IconCollection() :
+	LauncherCollection::LauncherCollection() :
 		_pages(gcnew List<PageTitle^>()),
 		_icons(gcnew Dictionary<int, IconInformation^>()), 
-		_positions(gcnew List<IconPosition^>()),
+		_positions(gcnew List<LauncherPosition^>()),
 		_wcount(5),
 		_hcount(5),
 		_foreColor(Color::FromArgb(255, 250, 250, 250)),
-		_backColor(Color::FromArgb(255, 26, 119, 189)),
+		_backColor(Color::FromArgb(230, 26, 119, 189)),
 		_accentColor(Color::FromArgb(255, 250, 250, 250))
 	{}
 
-	IconCollection^ IconCollection::Load(Xml::XmlDocument^ doc) {
-		IconCollection^ res = gcnew IconCollection();
+	LauncherCollection^ LauncherCollection::Load(Xml::XmlDocument^ doc) {
+		LauncherCollection^ res = gcnew LauncherCollection();
 
 		// ページリストを取得する
 		res->_pages = gcnew List<PageTitle^>();
@@ -51,20 +51,20 @@ namespace ZoppaShortcutLibrary {
 		}
 
 		// 位置情報リストを取得する
-		res->_positions = gcnew List<IconPosition^>();
+		res->_positions = gcnew List<LauncherPosition^>();
 		for each (Xml::XmlNode ^ node in doc->SelectNodes(L"setting/positions/position")) {
 			int page = Convert::ToInt32(node->Attributes[L"page"]->Value);
 			int row = Convert::ToInt32(node->Attributes[L"row"]->Value);
 			int column = Convert::ToInt32(node->Attributes[L"column"]->Value);
 			int index = Convert::ToInt32(node->Attributes[L"index"]->Value);
-			res->_positions->Add(gcnew IconPosition(page, row, column, index));
+			res->_positions->Add(gcnew LauncherPosition(page, row, column, index));
 		}
 		res->_positions->Sort();
 
 		return res;
 	}
 
-	Xml::XmlDocument^ IconCollection::Save() {
+	Xml::XmlDocument^ LauncherCollection::Save() {
 		Xml::XmlDocument^ doc = gcnew Xml::XmlDocument();
 
 		// ヘッダ要素を追加
@@ -105,7 +105,7 @@ namespace ZoppaShortcutLibrary {
 
 		// 位置情報を保存する
 		Xml::XmlElement^ possEle = doc->CreateElement(L"positions");
-		for each (IconPosition^ pos in this->_positions) {
+		for each (LauncherPosition^ pos in this->_positions) {
 			Xml::XmlElement^ ele = doc->CreateElement(L"position");
 			ele->SetAttribute(L"page", String::Format(L"{0}", pos->Page));
 			ele->SetAttribute(L"row", String::Format(L"{0}", pos->Row));
@@ -118,8 +118,8 @@ namespace ZoppaShortcutLibrary {
 		return doc;
 	}
 
-	bool IconCollection::UsedPosition(int page, int row, int column) {
-		IconPosition^ key = gcnew IconPosition(page, row, column, 0);
+	bool LauncherCollection::UsedPosition(int page, int row, int column) {
+		LauncherPosition^ key = gcnew LauncherPosition(page, row, column, 0);
 		int idx = this->SearchPosition(key);
 		if (idx >= 0 && idx < this->_positions->Count) {
 			return (this->_positions[idx]->CompareTo(key) == 0);
@@ -127,7 +127,7 @@ namespace ZoppaShortcutLibrary {
 		return false;
 	}
 
-	void IconCollection::UpdateIcon(int page, int row, int column, IconInformation^ icon) {
+	void LauncherCollection::UpdateIcon(int page, int row, int column, IconInformation^ icon) {
 		// アイコンのインデックスリストを作成
 		List<int>^ keys = gcnew List<int>(this->_icons->Keys);
 		keys->Sort();
@@ -142,21 +142,21 @@ namespace ZoppaShortcutLibrary {
 		}
 
 		// インスタンスに位置とアイコン情報を追加
-		this->_positions->Add(gcnew IconPosition(page, row, column, insert));
+		this->_positions->Add(gcnew LauncherPosition(page, row, column, insert));
 		this->_positions->Sort();
 		this->_icons->Add(insert, icon);
 	}
 
-	List<IconCollection::IconPair^>^ IconCollection::Collect(int page) {
-		List<IconCollection::IconPair^>^ res = gcnew List<IconCollection::IconPair^>();
+	List<LauncherCollection::IconPair^>^ LauncherCollection::Collect(int page) {
+		List<LauncherCollection::IconPair^>^ res = gcnew List<LauncherCollection::IconPair^>();
 
-		IconPosition^ key = gcnew IconPosition(page, 0, 0, 0);
+		LauncherPosition^ key = gcnew LauncherPosition(page, 0, 0, 0);
 		int idx = this->SearchPosition(key);
 		for (int i = idx; i < this->_positions->Count; ++i) {
-			IconPosition^ pos = this->_positions[i];
+			LauncherPosition^ pos = this->_positions[i];
 
 			if (pos->Page == page) {
-				IconCollection::IconPair^ pair = gcnew IconCollection::IconPair();
+				LauncherCollection::IconPair^ pair = gcnew LauncherCollection::IconPair();
 				pair->position = pos;
 				pair->informatition = this->_icons[pos->Index];
 				res->Add(pair);
@@ -166,22 +166,22 @@ namespace ZoppaShortcutLibrary {
 		return res;
 	}
 
-	void IconCollection::Remove(int page, int row, int column) {
-		IconPosition^ key = gcnew IconPosition(page, row, column, 0);
+	void LauncherCollection::Remove(int page, int row, int column) {
+		LauncherPosition^ key = gcnew LauncherPosition(page, row, column, 0);
 
 		int idx = this->SearchPosition(key);
 		if (idx >= 0 && 
 			idx < this->_positions->Count && 
 			this->_positions[idx]->CompareTo(key) == 0) {
 			// 登録済みの位置を取得
-			IconPosition^ pos = this->_positions[idx];
+			LauncherPosition^ pos = this->_positions[idx];
 
 			// インスタンスから情報を削除する
 			this->_positions->RemoveAt(idx);
 			this->_icons->Remove(pos->Index);
 
 			// ページを調整する
-			IconPosition^ topkey = gcnew IconPosition(page, 0, 0, 0);
+			LauncherPosition^ topkey = gcnew LauncherPosition(page, 0, 0, 0);
 			int topidx = this->SearchPosition(topkey);
 			if (topidx >= 0 &&
 				topidx < this->_positions->Count &&
@@ -206,7 +206,7 @@ namespace ZoppaShortcutLibrary {
 		}
 	}
 
-	int IconCollection::SearchPosition(IconPosition^ key) {
+	int LauncherCollection::SearchPosition(LauncherPosition^ key) {
 		int lf = 0, rt = this->_positions->Count, md = 0;
 
 		while (lf < rt) {
@@ -222,17 +222,17 @@ namespace ZoppaShortcutLibrary {
 		return lf;
 	}
 
-	Color IconCollection::ConvertToColor(String^ inpstr) {
+	Color LauncherCollection::ConvertToColor(String^ inpstr) {
 		unsigned int clr = Convert::ToUInt32(inpstr, 16);
 		return Color::FromArgb((clr >> 24) & 0xff, (clr >> 16) & 0xff, (clr >> 8) & 0xff, clr & 0xff);
 	}
 
-	String^ IconCollection::ConvertToString(Color inpclr) {
+	String^ LauncherCollection::ConvertToString(Color inpclr) {
 		return String::Format(L"{0:X2}{1:X2}{2:X2}{3:X2}", 
 					inpclr.A, inpclr.R, inpclr.G, inpclr.B);
 	}
 
-	int IconCollection::PageCount::get() {
+	int LauncherCollection::PageCount::get() {
 		if (this->_positions->Count > 0) {
 			return this->_positions[this->_positions->Count - 1]->Page + 1;
 		}
