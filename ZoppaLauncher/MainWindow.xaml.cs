@@ -81,6 +81,8 @@ namespace ZoppaLauncher
             try {
                 this.WriteLog("start");
 
+                this.Opacity = 0;
+
                 this._iconSetting = await this.LoadSettingFile();
                 if (this._iconSetting != null) {
                     this.WriteLog("load setting");
@@ -104,7 +106,8 @@ namespace ZoppaLauncher
                 }
 
                 await Dispatcher.BeginInvoke(
-                    () => { 
+                    () => {
+                        this.Opacity = 1.0;
                         this.SetPage(); 
                     },
                     System.Windows.Threading.DispatcherPriority.Loaded

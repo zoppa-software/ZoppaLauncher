@@ -47,10 +47,10 @@ namespace ZoppaLauncher
             this._diProvider = this._diService.BuildServiceProvider();
 
             var mainWin = this._diProvider.GetService<MainWindow>();
-            this.MainWindow = mainWin;
             if (mainWin != null) {
                 mainWin.AjustWindowPosition();
             }
+            this.MainWindow = mainWin;
             this.MainWindow?.Show();
         }
 
