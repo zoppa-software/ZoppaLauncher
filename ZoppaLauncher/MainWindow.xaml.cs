@@ -37,7 +37,7 @@ namespace ZoppaLauncher
 
         private NowTimeInformation _nowTime;
 
-        private ILogWriter _logWriter;
+        private ILogWriter _logger;
 
         private bool _hitAnimaflg;
 
@@ -45,7 +45,7 @@ namespace ZoppaLauncher
         {
             this._cellCollection = new LauncherForm();
             this._nowTime = new NowTimeInformation();
-            this._logWriter = new LogWriter();
+            this._logger = new LogWriter();
 
             InitializeComponent();
 
@@ -57,7 +57,7 @@ namespace ZoppaLauncher
         {
             this._cellCollection = collection ?? new LauncherForm();
             this._nowTime = nowTime ?? new NowTimeInformation();
-            this._logWriter = logger ?? new LogWriter();
+            this._logger = logger ?? new LogWriter();
 
             InitializeComponent();
 
@@ -65,29 +65,18 @@ namespace ZoppaLauncher
             this.nowTimeLabel.DataContext = this._nowTime;
         }
 
-        private void WriteLog(string message, [CallerMemberName] string memberName = "")
-        {
-            this._logWriter?.Write($"[{this.GetType().Name}.{memberName}] {message}");
-        }
-
-        private void WriteErrorLog(Exception ex, [CallerMemberName] string memberName = "")
-        {
-            this._logWriter?.Write($"[{this.GetType().Name}.{memberName}] error!:{ex.ToString()}");
-            this._logWriter?.Write(ex.StackTrace ?? "");
-        }
-
         protected override async void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
 
             try {
-                this.WriteLog("start");
+                this._logger?.WriteLog(this, "start");
 
                 this.Opacity = 0;
 
                 this._iconSetting = await this.LoadSettingFile();
                 if (this._iconSetting != null) {
-                    this.WriteLog("load setting");
+                    this._logger?.WriteLog(this, "load setting");
                     this.Resources["foreColor"] = new SolidColorBrush(this._iconSetting.ForeColor);
                     this._cellCollection.BackColor = new SolidColorBrush(this._iconSetting.BackColor);
                     this.SetHoverAminationColor("hoverAction", 80, this._iconSetting.AccentColor);
@@ -95,7 +84,7 @@ namespace ZoppaLauncher
                     this.CurrentPage = await this.LoadCurrentPage();
                 }
                 else {
-                    this.WriteLog("create default setting");
+                    this._logger?.WriteLog(this, "create default setting");
                     this._iconSetting = new LauncherCollection();
                     this.CurrentPage = 0;
                 }
@@ -116,7 +105,7 @@ namespace ZoppaLauncher
                 );
             }
             catch (Exception ex) {
-                this.WriteErrorLog(ex);
+                this._logger?.WriteErrorLog(this, ex);
             }
         }
 
@@ -135,7 +124,7 @@ namespace ZoppaLauncher
                 this.cellMenuPop.IsOpen = false;
             }
             catch (Exception ex) {
-                this.WriteErrorLog(ex);
+                this._logger?.WriteErrorLog(this, ex);
             }
         }
 
@@ -149,7 +138,7 @@ namespace ZoppaLauncher
                 }
             }
             catch (Exception ex) {
-                this.WriteErrorLog(ex);
+                this._logger?.WriteErrorLog(this, ex);
             }
         }
 
@@ -172,7 +161,7 @@ namespace ZoppaLauncher
                 }
             }
             catch (Exception ex) {
-                this.WriteErrorLog(ex);
+                this._logger?.WriteErrorLog(this, ex);
             }
         }
 

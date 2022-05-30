@@ -4,6 +4,7 @@ using System.Windows.Media;
 
 namespace ZoppaLauncher.Views
 {
+    /// <summary>画面表示位置調整機能です。</summary>
     public static class ScreenHelper
     {
         public static void AjustWindowPosition(this MainWindow win)

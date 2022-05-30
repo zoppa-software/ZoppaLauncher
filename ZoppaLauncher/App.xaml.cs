@@ -8,13 +8,13 @@ using ZoppaLauncher.Views;
 namespace ZoppaLauncher
 {
     /// <summary>アプリケーションクラス。</summary>
-    public partial class App : Application, SingleLaunchHelper.ITargetWindow
+    public partial class App : Application
     {
         // DIサービス
         private ServiceCollection _diService;
 
         // DIプロバイダ
-        private ServiceProvider? _diProvider;
+        private ServiceProvider _diProvider;
 
         /// <summary>コンストラクタ。</summary>
         public App()
@@ -37,7 +37,9 @@ namespace ZoppaLauncher
                 }
             );
 
-            this.UseSinglton("zoppa launcherr mutex");
+            this._diProvider = this._diService.BuildServiceProvider();
+
+            this.UseSinglton(this._diProvider, "zoppa launcherr mutex");
         }
 
         /// <summary>アプリケーション開始イベント。</summary>
@@ -46,20 +48,12 @@ namespace ZoppaLauncher
         {
             base.OnStartup(e);
 
-            this._diProvider = this._diService.BuildServiceProvider();
-
             var mainWin = this._diProvider.GetService<MainWindow>();
             if (mainWin != null) {
                 mainWin.AjustWindowPosition();
             }
             this.MainWindow = mainWin;
             this.MainWindow?.Show();
-        }
-
-
-        public void Reshow()
-        {
-            Dispatcher.Invoke(() => { this.MainWindow?.Show(); });
         }
 
         /// <summary>アプリケーション終了イベント。</summary>
@@ -100,6 +94,12 @@ namespace ZoppaLauncher
                     dirInto.Create();
                 }
                 return dirInto.FullName;
+            }
+        }
+
+        public ServiceProvider? DiProvider {
+            get {
+                return this._diProvider;
             }
         }
     }

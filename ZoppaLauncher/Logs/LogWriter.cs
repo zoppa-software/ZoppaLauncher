@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualBasic;
@@ -36,6 +37,44 @@ namespace ZoppaLauncher.Logs
         public void Write(string message)
         {
             this._log?.Write($"[{this.DateNow.ToString("yyyy/MM/dd HH:mm:ss")}] {message}");
+        }
+
+        /// <summary>通常ログ出力。</summary>
+        /// <param name="caller">呼び出し元クラス。</param>
+        /// <param name="message">ログメッセージ。</param>
+        /// <param name="memberName">呼び出し元メソッド名。</param>
+        public void WriteLog(object caller, string message, [CallerMemberName] string memberName = "")
+        {
+            this.Write($"[{caller.GetType().Name}.{memberName}] {message}");
+        }
+
+        /// <summary>通常ログ出力。</summary>
+        /// <param name="caller">呼び出し元クラス。</param>
+        /// <param name="message">ログメッセージ。</param>
+        /// <param name="memberName">呼び出し元メソッド名。</param>
+        public void WriteLog(Type caller, string message, [CallerMemberName] string memberName = "")
+        {
+            this.Write($"[{caller.Name}.{memberName}] {message}");
+        }
+
+        /// <summary>エラーログ出力。</summary>
+        /// <param name="caller">呼び出し元クラス。</param>
+        /// <param name="ex">例外。</param>
+        /// <param name="memberName">呼び出し元メソッド名。</param>
+        public void WriteErrorLog(object caller, Exception ex, [CallerMemberName] string memberName = "")
+        {
+            this.Write($"[{caller.GetType().Name}.{memberName}] error!:{ex.ToString()}");
+            this.Write(ex.StackTrace ?? "");
+        }
+
+        /// <summary>エラーログ出力。</summary>
+        /// <param name="caller">呼び出し元クラス。</param>
+        /// <param name="ex">例外。</param>
+        /// <param name="memberName">呼び出し元メソッド名。</param>
+        public void WriteErrorLog(Type caller, Exception ex, [CallerMemberName] string memberName = "")
+        {
+            this.Write($"[{caller.Name}.{memberName}] error!:{ex.ToString()}");
+            this.Write(ex.StackTrace ?? "");
         }
 
         /// <summary>書き込み中のログがあれば、書き込みが完了するまで待機します。</summary>
