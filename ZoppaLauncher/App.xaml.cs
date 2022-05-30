@@ -8,7 +8,7 @@ using ZoppaLauncher.Views;
 namespace ZoppaLauncher
 {
     /// <summary>アプリケーションクラス。</summary>
-    public partial class App : Application
+    public partial class App : Application, SingleLaunchHelper.ITargetWindow
     {
         // DIサービス
         private ServiceCollection _diService;
@@ -36,6 +36,8 @@ namespace ZoppaLauncher
                     return new LogWriter($"{LogPath}\\operation.log");
                 }
             );
+
+            this.UseSinglton("zoppa launcherr mutex");
         }
 
         /// <summary>アプリケーション開始イベント。</summary>
@@ -52,6 +54,12 @@ namespace ZoppaLauncher
             }
             this.MainWindow = mainWin;
             this.MainWindow?.Show();
+        }
+
+
+        public void Reshow()
+        {
+            Dispatcher.Invoke(() => { this.MainWindow?.Show(); });
         }
 
         /// <summary>アプリケーション終了イベント。</summary>

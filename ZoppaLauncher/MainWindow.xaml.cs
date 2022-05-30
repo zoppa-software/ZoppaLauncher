@@ -13,6 +13,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -20,6 +21,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ZoppaLauncher.Logs;
 using ZoppaLauncher.Models;
+using ZoppaLauncher.Views;
 using ZoppaShortcutLibrary;
 
 namespace ZoppaLauncher
@@ -65,13 +67,13 @@ namespace ZoppaLauncher
 
         private void WriteLog(string message, [CallerMemberName] string memberName = "")
         {
-            this._logWriter.Write($"[{this.GetType().Name}.{memberName}] {message}");
+            this._logWriter?.Write($"[{this.GetType().Name}.{memberName}] {message}");
         }
 
         private void WriteErrorLog(Exception ex, [CallerMemberName] string memberName = "")
         {
-            this._logWriter.Write($"[{this.GetType().Name}.{memberName}] error!:{ex.ToString()}");
-            this._logWriter.Write(ex.StackTrace ?? "");
+            this._logWriter?.Write($"[{this.GetType().Name}.{memberName}] error!:{ex.ToString()}");
+            this._logWriter?.Write(ex.StackTrace ?? "");
         }
 
         protected override async void OnInitialized(EventArgs e)
@@ -200,7 +202,7 @@ namespace ZoppaLauncher
                             linkInfo.UseShellExecute = true;
                             Process.Start(linkInfo);
 
-                            this.WindowState = WindowState.Minimized;
+                            this.Hide();
                             this.cellControl.ClearCellInformation();
                         }
                     }
@@ -219,7 +221,7 @@ namespace ZoppaLauncher
         private void hiddenBtn_Click(object sender, RoutedEventArgs e)
         {
             try {
-                this.WindowState = WindowState.Minimized;
+                this.Hide();
             }
             catch (Exception ex) {
                 Debug.WriteLine($"{nameof(this.hiddenBtn_Click)}:{ex.ToString()}");
@@ -302,7 +304,7 @@ namespace ZoppaLauncher
                     linkInfo.Verb = "RunAs";
                     Process.Start(linkInfo);
 
-                    this.WindowState = WindowState.Minimized;
+                    this.Hide();
                     this.cellControl.ClearCellInformation();
                 }
             }

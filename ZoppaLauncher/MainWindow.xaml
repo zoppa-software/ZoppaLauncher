@@ -9,7 +9,8 @@
         xmlns:properties="clr-namespace:ZoppaLauncher.Properties"
         mc:Ignorable="d"
         WindowStyle="None" AllowsTransparency="True" Topmost="True" 
-        Title="{x:Static properties:Resources.MainWindow_Title}" Height="569" Width="515" Background="{x:Null}">
+        Title="{x:Static properties:Resources.MainWindow_Title}"
+        Height="569" Width="515" Background="{x:Null}">
 
     <Window.Resources>
         <System:Double x:Key="cellSize">96</System:Double>
