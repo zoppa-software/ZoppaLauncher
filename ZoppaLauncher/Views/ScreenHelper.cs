@@ -1,22 +1,29 @@
 ﻿using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Media;
+using ZoppaLauncher.Logs;
 
 namespace ZoppaLauncher.Views
 {
     /// <summary>画面表示位置調整機能です。</summary>
     public static class ScreenHelper
     {
-        public static void AjustWindowPosition(this MainWindow win)
+        /// <summary>ウィンドウの位置をタスクバーの位置に合わせて調整します。</summary>
+        /// <param name="win">メインウィンドウ位置。</param>
+        public static void AjustWindowPosition(this MainWindow win, ILogWriter? logger = null)
         {
+            logger?.WriteLog(typeof(ScreenHelper), "ajust window position start");
             var srn = Screen.AllScreens.Where(
                 (s) => {
+                    // マウスカーソルのあるウィンドウを取得します
                     return s.Bounds.Contains(System.Windows.Forms.Cursor.Position);
                 }
             ).First();
 
+            // 拡大率が設定のあるウィンドウの計算のため、DPIを取得します
             var dpi = VisualTreeHelper.GetDpi(win);
 
+            // タスクバーの位置に合わせてウィンドウ位置を設定
             if (srn.Bounds.Left < srn.WorkingArea.Left) {
                 
             }

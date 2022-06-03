@@ -10,6 +10,7 @@
         mc:Ignorable="d"
         WindowStyle="None" AllowsTransparency="True" Topmost="True" 
         Title="{x:Static properties:Resources.MainWindow_Title}"  
+        IsVisibleChanged="window_IsVisibleChanged"
         Height="569" Width="515" Background="{x:Null}">
 
     <Window.Resources>
@@ -29,7 +30,7 @@
                             <Storyboard>
                                 <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Fill).(SolidColorBrush.Color)">
                                     <EasingColorKeyFrame KeyTime="00:00:00" Value="#00000000"/>
-                                    <EasingColorKeyFrame KeyTime="00:00:00.3" Value="#33FAFAFA"/>
+                                    <EasingColorKeyFrame KeyTime="00:00:00.5" Value="#33FAFAFA"/>
                                 </ColorAnimationUsingKeyFrames>
                             </Storyboard>
                         </BeginStoryboard>

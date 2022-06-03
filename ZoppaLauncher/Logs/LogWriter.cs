@@ -6,7 +6,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.VisualBasic;
 
 namespace ZoppaLauncher.Logs
 {
@@ -29,7 +28,7 @@ namespace ZoppaLauncher.Logs
         /// <param name="dateChangee">日付変更切り替えフラグ。</param>
         public LogWriter(string logFilePath, Encoding? encode = null, int maxLogSize = 30 * 1024 * 1024, int logGeneration = 10, bool dateChange = false)
         {
-            this._log = new Logger(this, logFilePath, encode ?? System.Text.Encoding.Default, maxLogSize, logGeneration, dateChange);
+            this._log = new Logger(this, logFilePath, encode ?? Encoding.GetEncoding("Shift_JIS"), maxLogSize, logGeneration, dateChange);
         }
 
         /// <summary>ログを出力します。</summary>

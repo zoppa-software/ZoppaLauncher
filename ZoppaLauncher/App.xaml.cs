@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Text;
 using System.Windows;
 using ZoppaLauncher.Logs;
 using ZoppaLauncher.Models;
@@ -39,6 +40,10 @@ namespace ZoppaLauncher
 
             this._diProvider = this._diService.BuildServiceProvider();
 
+            // s-jis使用のためエンコード設定
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            // 単一アプリケーション起動設定を行う
             this.UseSinglton(this._diProvider, "zoppa launcherr mutex");
         }
 

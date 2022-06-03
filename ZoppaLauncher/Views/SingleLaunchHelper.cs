@@ -1,16 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO.Pipes;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using ZoppaLauncher.Logs;
 
 namespace ZoppaLauncher.Views
@@ -50,11 +42,9 @@ namespace ZoppaLauncher.Views
             app.Exit += App_Exit;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <summary>アプリケーション開始イベントハンドラ。</summary>
+        /// <param name="sender">イベント発生元。</param>
+        /// <param name="e">イベントオブジェクト。</param>
         private static void App_Startup(object sender, StartupEventArgs e)
         {
             try {
@@ -68,7 +58,7 @@ namespace ZoppaLauncher.Views
                 }
                 else {
                     // 表示メッセージを送信
-                    _logger?.WriteLog(typeof(SingleLaunchHelper), "send show runned process");
+                    _logger?.WriteLog(typeof(SingleLaunchHelper), "send show nessage to runned process");
                     SendShowMessage();
                     _app?.Shutdown();
                 }
@@ -78,27 +68,29 @@ namespace ZoppaLauncher.Views
             }
         }
 
+        /// <summary>メインウィンドウを表示するメッセージを受信します。</summary>
         private static async void ListenShowMessageAsync()
         {
-            try {
-                while (true) {
-                    using (var pipe = new NamedPipeServerStream(_pipeName, PipeDirection.InOut)) {
-                        await pipe.WaitForConnectionAsync();
+            while (true) {
+                using (var pipe = new NamedPipeServerStream(_pipeName, PipeDirection.InOut)) {
+                    // パイプからの受信を待機
+                    _logger?.WriteLog(typeof(SingleLaunchHelper), "wait start");
+                    await pipe.WaitForConnectionAsync();
+                    _logger?.WriteLog(typeof(SingleLaunchHelper), "wait end");
 
-                        if (pipe.IsConnected) {
-                            var buf = new byte[1024];
-                            pipe.Read(buf, 0, buf.Length);
+                    // 受信したならばメインウィンドウを表示する
+                    if (pipe.IsConnected) {
+                        var buf = new byte[1024];
+                        pipe.Read(buf, 0, buf.Length);
 
-                            _app?.MainWindow?.Show();
-                        }
+                        _logger?.WriteLog(typeof(SingleLaunchHelper), "show main window");
+                        _app?.MainWindow?.Show();
                     }
                 }
             }
-            catch (Exception ex) {
-                _logger?.WriteErrorLog(typeof(SingleLaunchHelper), ex);
-            }
         }
 
+        /// <summary>メインウィンドウを表示するメッセージを送信します。</summary>
         private static void SendShowMessage()
         {
             using (var pipe = new NamedPipeClientStream(".", _pipeName, PipeDirection.Out)) {
@@ -108,12 +100,21 @@ namespace ZoppaLauncher.Views
             }
         }
 
+        /// <summary>アプリケーション終了イベントハンドラです。</summary>
+        /// <param name="sender">イベント発生元。</param>
+        /// <param name="e">イベントオブジェクト。</param>
         private static void App_Exit(object sender, ExitEventArgs e)
         {
-            if (_hasHnd) {
-                _mutex?.ReleaseMutex();
+            try {
+                _logger?.WriteLog(typeof(SingleLaunchHelper), "exit");
+                if (_hasHnd) {
+                    _mutex?.ReleaseMutex();
+                }
+                _mutex?.Close();
             }
-            _mutex?.Close();
+            catch (Exception ex) {
+                _logger?.WriteErrorLog(typeof(SingleLaunchHelper), ex);
+            }
         }
     }
 }

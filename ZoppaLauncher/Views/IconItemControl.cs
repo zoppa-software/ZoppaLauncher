@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -6,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZoppaLauncher.Logs;
 using ZoppaLauncher.Models;
 using ZoppaShortcutLibrary;
 
@@ -59,6 +61,9 @@ namespace ZoppaLauncher.Views
         // クリック位置
         private Point? _clickPoint;
 
+        // ログ出力機能
+        private ILogWriter? _logger;
+
         /// <summary>コンストラクタ。</summary>
         public IconItemControl() : base()
         {
@@ -66,6 +71,7 @@ namespace ZoppaLauncher.Views
             this._dragGhost = null;
             this._layer = null;
             this._clickPoint = null;
+            this._logger = (App.Current as App)?.DiProvider?.GetService<ILogWriter>();
         }
 
         /// <summary>マウス押下イベントです。</summary>
@@ -73,7 +79,13 @@ namespace ZoppaLauncher.Views
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
-            this._clickPoint = e.GetPosition(this);
+            try {
+                this._clickPoint = e.GetPosition(this);
+                _logger?.WriteLog(this, $"mouse down x:{this._clickPoint?.X} y:{this._clickPoint?.Y}");
+            }
+            catch (Exception ex) {
+                _logger?.WriteErrorLog(this, ex);
+            }
         }
 
         /// <summary>選択されたマウス位置とセル情報を消去します。</summary>
@@ -97,16 +109,21 @@ namespace ZoppaLauncher.Views
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-
-            // クリック位置より大きな動きがあれば入れ替え、削除コーストを作成
-            if (this._clickPoint != null && this._selectedIcon?.LinkPath != null && 
-                this._dragGhost == null && !this.StayMousePosition(e.GetPosition(this))) {
-                this._dragGhost = new DragFileGhost(this, IconInformation.Load(MOVE_TAG, this._selectedIcon.LinkPath ));
-                this.Layer.Add(this._dragGhost);
-                this._clickPoint = null;
-                this.CaptureMouse();
+            try {
+                // クリック位置より大きな動きがあれば入れ替え、削除コーストを作成
+                if (this._clickPoint != null && this._selectedIcon?.LinkPath != null &&
+                    this._dragGhost == null && !this.StayMousePosition(e.GetPosition(this))) {
+                    _logger?.WriteLog(this, "drag start! (icon move)");
+                    this._dragGhost = new DragFileGhost(this, IconInformation.Load(MOVE_TAG, this._selectedIcon.LinkPath));
+                    this.Layer.Add(this._dragGhost);
+                    this._clickPoint = null;
+                    this.CaptureMouse();
+                }
+                this._dragGhost?.InvalidateVisual();
             }
-            this._dragGhost?.InvalidateVisual();
+            catch (Exception ex) {
+                _logger?.WriteErrorLog(this, ex);
+            }
         }
 
         /// <summary>クリック位置より大きな動きがなければ真を返します。</summary>
@@ -138,13 +155,16 @@ namespace ZoppaLauncher.Views
                     var hits = VisualTreeHelper.HitTest(this, e.GetPosition(this));
                     CellInformation? info = null;
                     if ((info = (hits?.VisualHit as FrameworkElement)?.DataContext as CellInformation) != null) {
+                        _logger?.WriteLog(this, $"drop, move icon x:{this._selectedIcon.Column} y:{this._selectedIcon.Row} → x:{info.Column} y:{info.Row}");
                         this.MoveIcon?.Invoke(this, this._selectedIcon, info, this._dragGhost?.LinkPath ?? "");
                     }
                     else if (hits == null) {
+                        _logger?.WriteLog(this, "drop, remove icon");
                         this.RemoveIcon?.Invoke(this, this._selectedIcon);
                     }
 
                     // ゴーストをレイヤーより削除
+                    _logger?.WriteLog(this, "remove icon ghost");
                     this.Layer.Remove(this._dragGhost);
                     this._dragGhost = null;
                     this._selectedIcon = null;
@@ -152,7 +172,7 @@ namespace ZoppaLauncher.Views
                 }
             }
             catch (Exception ex) {
-                Debug.WriteLine($"{nameof(this.OnMouseUp)}:{ex.ToString()}");
+                _logger?.WriteErrorLog(this, ex);
             }
         }
 
@@ -164,22 +184,26 @@ namespace ZoppaLauncher.Views
                 if (this._dragGhost == null) {
                     // ドラッグ情報を取得する
                     var target = e.Data.GetData(DataFormats.FileDrop);
-                    e.Effects = DragDropEffects.None;
-
+                    
                     // ドラッグされたファイルを調査し、対象ファイルならゴーストを表示する
                     var files = target as string[];
                     if (files != null && files.Length > 0 && 
                         (Path.GetExtension(files[0]).ToLower() == ".lnk" || Path.GetExtension(files[0]).ToLower() == ".exe")) {
+                        _logger?.WriteLog(this, $"drag start! (apend link {files[0]})");
                         e.Effects = DragDropEffects.Move;
 
                         this._dragGhost = new DragFileGhost(this, IconInformation.Load(DRAG_TAG, files[0]));
                         this.Layer.Add(this._dragGhost);
                     }
+                    else {
+                        e.Effects = DragDropEffects.None;
+                    }
+
                     e.Handled = true;
                 }
             }
             catch (Exception ex) {
-                Debug.WriteLine($"{nameof(this.OnDragEnter)}:{ex.ToString()}");
+                _logger?.WriteErrorLog(this, ex);
             }
         }
 
@@ -191,7 +215,7 @@ namespace ZoppaLauncher.Views
                 this._dragGhost?.InvalidateVisual();
             }
             catch (Exception ex) {
-                Debug.WriteLine($"{nameof(this.OnDragOver)}:{ex.ToString()}");
+                _logger?.WriteErrorLog(this, ex);
             }
         }
 
@@ -206,16 +230,18 @@ namespace ZoppaLauncher.Views
                     var hits = VisualTreeHelper.HitTest(this, e.GetPosition(this));
                     CellInformation? info = null;
                     if ((info = (hits.VisualHit as FrameworkElement)?.DataContext as CellInformation) != null) {
+                        _logger?.WriteLog(this, "fire drop link file event");
                         this.DropLinkFile?.Invoke(this, info, this._dragGhost?.LinkPath ?? "");
                     }
 
                     // ゴーストをレイヤーより削除
+                    _logger?.WriteLog(this, "remove icon ghost");
                     this.Layer.Remove(this._dragGhost);
                     this._dragGhost = null;
                     this.InvalidateVisual();
                 }
                 catch (Exception ex) {
-                    Debug.WriteLine($"{nameof(this.OnDrop)}:{ex.ToString()}");
+                    _logger?.WriteErrorLog(this, ex);
                 }
             }    
         }
@@ -227,12 +253,13 @@ namespace ZoppaLauncher.Views
             if (this._dragGhost?.Name == DRAG_TAG) {
                 try {
                     // ゴーストをレイヤーより削除
+                    _logger?.WriteLog(this, "remove ghost");
                     this.Layer.Remove(this._dragGhost);
                     this._dragGhost = null;
                     this.InvalidateVisual();
                 }
                 catch (Exception ex) {
-                    Debug.WriteLine($"{nameof(this.OnDragLeave)}:{ex.ToString()}");
+                    _logger?.WriteErrorLog(this, ex);
                 }
             }
         }

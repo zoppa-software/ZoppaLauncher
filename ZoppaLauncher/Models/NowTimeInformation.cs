@@ -18,7 +18,7 @@ namespace ZoppaLauncher.Models
         {
             this._timer = new DispatcherTimer();
             this._timer.Tick += new EventHandler(Timer_Tick);
-            this._timer.Interval = TimeSpan.FromMilliseconds(500);
+            this._timer.Interval = TimeSpan.FromMilliseconds(100);
             this._timer.Start();
         }
 
@@ -33,5 +33,21 @@ namespace ZoppaLauncher.Models
 
         /// <summary>現在時刻を取得します。</summary>
         public DateTime Time { get; private set; }
+
+        /// <summary>タイマーの有効、無効を設定します。</summary>
+        public bool IsEnable {
+            get { return this._timer.IsEnabled; }
+            set {
+                if (value) {
+                    if (!this._timer.IsEnabled) { 
+                        this._timer.Start();
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(this.Time)));
+                    }
+                }
+                else {
+                    if (this._timer.IsEnabled) { this._timer.Stop(); }
+                }
+            }
+        }
     }
 }

@@ -112,9 +112,31 @@ namespace ZoppaLauncher
         private void SetHoverAminationColor(string storyName, byte transLv, Color hcolor)
         {
             var style = this.FindResource(storyName) as Style;
-            var frame = ((style?.Triggers[0].EnterActions[0] as BeginStoryboard)?.Storyboard.Children[0] as ColorAnimationUsingKeyFrames)?.KeyFrames[1];
+            var frame = ((style?.Triggers[0].EnterActions[0] as BeginStoryboard)?
+                            .Storyboard.Children[0] as ColorAnimationUsingKeyFrames)?.KeyFrames[1];
             if (frame != null) {
                 frame.Value = Color.FromArgb(transLv, hcolor.R, hcolor.G, hcolor.B);
+            }
+        }
+
+        protected override void OnStateChanged(EventArgs e)
+        {
+            base.OnStateChanged(e);
+            try {
+                this._nowTime.IsEnable = (this.WindowState != WindowState.Minimized);
+            }
+            catch (Exception ex) {
+                this._logger?.WriteErrorLog(this, ex);
+            }
+        }
+
+        private void window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            try {
+                this._nowTime.IsEnable = this.IsVisible;
+            }
+            catch (Exception ex) {
+                this._logger?.WriteErrorLog(this, ex);
             }
         }
 
