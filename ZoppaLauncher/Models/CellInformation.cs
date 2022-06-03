@@ -86,5 +86,10 @@ namespace ZoppaLauncher.Models
 
         /// <summary>リンク先パスを取得します。</summary>
         public string? LinkPath { get; }
+
+        /// <summary>リンク先パスが設定してあれば真を返します。</summary>
+        public bool HasLink {
+            get { return (this.LinkPath?.Trim() ?? "") != ""; }
+        }
     }
 }

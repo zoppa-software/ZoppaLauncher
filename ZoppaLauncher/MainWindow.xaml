@@ -127,7 +127,8 @@
             HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             ScrollViewer.VerticalScrollBarVisibility="Disabled" 
-            DropLinkFile="cellControl_DropLinkFile" MoveIcon="cellControl_MoveIcon" RemoveIcon="cellControl_RemoveIcon">
+            DropLinkFile="cellControl_DropLinkFile" MoveIcon="cellControl_MoveIcon" 
+            RemoveIcon="cellControl_RemoveIcon" MouseMovingIcon="cellControl_MovingIcon" MouseStayIcon="cellControl_StayIcon">
 
             <!-- 枠のテンプレートデザイン -->
             <Views:IconItemControl.Template>
@@ -146,8 +147,7 @@
             <!-- セルのデザインテンプレート -->
             <Views:IconItemControl.ItemTemplate>
                 <DataTemplate>
-                    <Grid x:Name="IconButton" Width="96" Height="96" 
-                          IsHitTestVisible="True" RenderTransformOrigin="0.5, 0.5" >
+                    <Grid x:Name="IconButton" Width="96" Height="96" IsHitTestVisible="True" RenderTransformOrigin="0.5, 0.5" >
                         <Grid.RenderTransform>
                             <TransformGroup>
                                 <ScaleTransform/>
@@ -156,13 +156,13 @@
                         
                         <Rectangle x:Name="IconFrame" Style="{DynamicResource hoverAction}"
                                    MouseDown="IconFrame_MouseDown" MouseUp="IconFrame_MouseUp" 
-                                   Fill="#00000000" RadiusX="5" RadiusY="5" />
+                                   Fill="#00000000" RadiusX="5" RadiusY="5"/>
 
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Image Source="{Binding Image}" Width="48" Height="48" IsHitTestVisible="False"/>
                             <TextBlock Text="{Binding Name}" Foreground="{DynamicResource foreColor}" 
                                        IsHitTestVisible="False" Height="32" Margin="3,3,3,0" 
-                                       TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis"/>
+                                       TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </Grid>
                 </DataTemplate>
@@ -255,6 +255,21 @@
                         </StackPanel>
                         <Rectangle x:Name="contOpenBtn" Grid.Row="4" RadiusX="3" RadiusY="3" MouseDown="OpenLocation_MouseDown" />
                     </Grid>
+                </Border>
+            </Grid>
+        </Popup>
+
+        <!-- 情報ポップアップ -->
+        <Popup x:Name="infoPop" AllowsTransparency="True">
+            <Grid MaxWidth="250">
+                <Border CornerRadius="5,5,5,5" Margin="0,0,5,5" 
+                        Background="{Binding Fill, ElementName=backframe}" BorderBrush="#33000000" BorderThickness="1,1,1,1">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="3" Opacity="0.3"/>
+                    </Border.Effect>
+
+                    <TextBlock Margin="5" Text="{Binding Name}" Style="{Binding Mode=OneWay, Source={StaticResource labelStyle}}" 
+                               TextWrapping="WrapWithOverflow" />
                 </Border>
             </Grid>
         </Popup>

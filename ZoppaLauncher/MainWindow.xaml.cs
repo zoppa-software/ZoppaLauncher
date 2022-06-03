@@ -144,6 +144,7 @@ namespace ZoppaLauncher
         {
             try {
                 this.cellMenuPop.IsOpen = false;
+                this.infoPop.IsOpen = false;
             }
             catch (Exception ex) {
                 this._logger?.WriteErrorLog(this, ex);
@@ -157,6 +158,9 @@ namespace ZoppaLauncher
             try {
                 if (this.cellMenuPop.IsOpen) {
                     this.cellMenuPop.IsOpen = false;
+                }
+                if (this.infoPop.IsOpen) {
+                    this.infoPop.IsOpen = false;
                 }
             }
             catch (Exception ex) {
@@ -174,7 +178,7 @@ namespace ZoppaLauncher
                         this.cellControl.SelectCellInformation(e.GetPosition(this.cellControl), icon);
                     }
                     else if (e.RightButton == MouseButtonState.Pressed && icon.Name?.Trim() != "") {
-                        this.cellMenuPop.PlacementTarget = (Rectangle)sender;
+                        this.cellMenuPop.PlacementTarget = (UIElement)sender;
                         this.cellMenuPop.Placement = PlacementMode.Bottom;
                         this.cellMenuPop.IsOpen = true;
                         this.cellMenuPop.DataContext = icon;
@@ -286,6 +290,47 @@ namespace ZoppaLauncher
             }
             catch (Exception ex) {
                 Debug.WriteLine($"{nameof(this.cellControl_RemoveIcon)}:{ex.ToString()}");
+            }
+        }
+
+
+        private void cellControl_MovingIcon(object sender, EventArgs e)
+        {
+            try {
+                if (this.infoPop.IsOpen) {
+                    this.infoPop.IsOpen = false;
+                }
+            }
+            catch (Exception ex) {
+                this._logger?.WriteErrorLog(this, ex);
+            }
+        }
+
+        private void cellControl_StayIcon(object sender, CellInformation infoCell)
+        {
+            try {
+                if (infoCell.HasLink) {
+                    this.infoPop.PlacementTarget = this.SearchParentElement(sender);
+                    this.infoPop.Placement = PlacementMode.Top;
+                    this.infoPop.IsOpen = true;
+                    this.infoPop.DataContext = infoCell;
+                }
+            }
+            catch (Exception ex) {
+                this._logger?.WriteErrorLog(this, ex);
+            }
+        }
+
+        private UIElement? SearchParentElement(object sender)
+        {
+            if (sender is Image) {
+                return ((sender as Image)?.Parent as FrameworkElement)?.Parent as UIElement;
+            }
+            else if (sender is TextBlock) {
+                return ((sender as TextBlock)?.Parent as FrameworkElement)?.Parent as UIElement;
+            }
+            else {
+                return sender as UIElement;
             }
         }
 
