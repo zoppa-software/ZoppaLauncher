@@ -6,7 +6,6 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
 using ZoppaLauncher.Logs;
 using ZoppaLauncher.Models;
 using ZoppaShortcutLibrary;
@@ -38,7 +37,7 @@ namespace ZoppaLauncher.Views
         /// <summary>選択イベントデリゲート。</summary>
         /// <param name="sender">イベント発行元。</param>
         /// <param name="delCell">削除セル。</param>
-        public delegate void SelectIconHandler(object sender, CellInformation delCell);
+        public delegate void RemoveIconHandler(object sender, CellInformation delCell);
 
         /// <summary>ドロップイベント。</summary>
         public event DropLinkFileHandler? DropLinkFile;
@@ -47,13 +46,7 @@ namespace ZoppaLauncher.Views
         public event MoveIconHandler? MoveIcon;
 
         /// <summary>削除イベント。</summary>
-        public event SelectIconHandler? RemoveIcon;
-
-        /// <summary>マウス移動イベント。</summary>
-        public event EventHandler? MouseMovingIcon;
-
-        /// <summary>マウス待機イベント。</summary>
-        public event SelectIconHandler? MouseStayIcon;
+        public event RemoveIconHandler? RemoveIcon;
 
         // ゴースト表示レイヤ
         private AdornerLayer? _layer;
@@ -67,18 +60,6 @@ namespace ZoppaLauncher.Views
         // クリック位置
         private Point? _clickPoint;
 
-        // マウス停止タイマー
-        private DispatcherTimer _stayTimer;
-
-        // マウス停止フラグ
-        private bool _stayed;
-
-        // マウス停止時刻
-        private DateTime _stayTime;
-
-        // マウス位置
-        private Point _stayPoint;
-
         // ログ出力機能
         private ILogWriter? _logger;
 
@@ -90,13 +71,13 @@ namespace ZoppaLauncher.Views
             this._layer = null;
             this._clickPoint = null;
             this._logger = (App.Current as App)?.DiProvider?.GetService<ILogWriter>();
-            this._stayTimer = new DispatcherTimer();
-            this._stayTimer.Tick += new EventHandler(StayTimer_Tick);
-            this._stayTimer.Interval = TimeSpan.FromMilliseconds(100);
-            this._stayTimer.Start();
-            this._stayed = false;
-            this._stayTime = DateTime.MinValue;
-            this._stayPoint = new Point(-10000, -10000);
+            //this._stayTimer = new DispatcherTimer();
+            //this._stayTimer.Tick += new EventHandler(StayTimer_Tick);
+            //this._stayTimer.Interval = TimeSpan.FromMilliseconds(100);
+            //this._stayTimer.Start();
+            //this._stayed = false;
+            //this._stayTime = DateTime.MinValue;
+            //this._stayPoint = new Point(-10000, -10000);
         }
 
         /// <summary>マウス押下イベントです。</summary>
@@ -160,41 +141,6 @@ namespace ZoppaLauncher.Views
                 Math.Sqrt(
                     Math.Pow((this._clickPoint?.X ?? 0) - point.X, 2) + 
                     Math.Pow((this._clickPoint?.Y ?? 0) - point.Y, 2)) <= 8);
-        }
-
-        /// <summary>マウス停止タイマーイベントハンドラ。</summary>
-        /// <param name="sender">イベント発行元。</param>
-        /// <param name="e">イベントオブジェクト。</param>
-        private void StayTimer_Tick(object? sender, EventArgs e)
-        {
-            var dp = System.Windows.Forms.Cursor.Position;
-            var pt = this.PointFromScreen(new Point(dp.X, dp.Y));
-
-            if (pt.X > 0 && pt.Y > 0 && pt.X < this.ActualWidth && pt.Y < this.ActualHeight) {
-                if (this._stayPoint != pt) {
-                    // マウス位置の移動があれば時刻チェック
-                    this._stayPoint = pt;
-                    this._stayTime = DateTime.Now;
-                    this._stayed = false;
-                    this.MouseMovingIcon?.Invoke(this, EventArgs.Empty);
-                }
-                else if (DateTime.Now.Subtract(this._stayTime).TotalSeconds > 1.0) {
-                    // マウスの移動が一定期間以上なければ通知
-                    if (!this._stayed) {
-                        this._stayed = true;
-                        var hits = VisualTreeHelper.HitTest(this, pt);
-                        CellInformation? info = null;
-                        if ((info = (hits.VisualHit as FrameworkElement)?.DataContext as CellInformation) != null) {
-                            this.MouseStayIcon?.Invoke(hits.VisualHit, info);
-                        }
-                    }
-                }
-            }
-            else {
-                // マウス位置がウィンドウ以外ならば非表示にする
-                this.MouseMovingIcon?.Invoke(this, EventArgs.Empty);
-                this._stayed = false;
-            }
         }
 
         /// <summary>マウスアップイベントです。</summary>

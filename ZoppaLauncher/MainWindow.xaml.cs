@@ -29,7 +29,7 @@ namespace ZoppaLauncher
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, MouseStayHelper.INotification
     {
         private LauncherCollection? _iconSetting;
 
@@ -95,6 +95,9 @@ namespace ZoppaLauncher
                 }) {
                     rec.Style = this.FindResource("hoverAction") as Style;
                 }
+
+                // マウス停止を監視する
+                this.MouswStaySurveillance();
 
                 await Dispatcher.BeginInvoke(
                     () => {
@@ -194,6 +197,13 @@ namespace ZoppaLauncher
         private async void IconFrame_MouseUp(object sender, MouseButtonEventArgs e)
         {
             try {
+                if (this.cellMenuPop.IsOpen) {
+                    this.cellMenuPop.IsOpen = false;
+                }
+                if (this.infoPop.IsOpen) {
+                    this.infoPop.IsOpen = false;
+                }
+
                 if (this.cellControl.IsSelectedIcon &&
                     this.cellControl.StayMousePosition(e.GetPosition(this.cellControl))) {
                     var icon = (e.Source as FrameworkElement)?.DataContext as CellInformation;
@@ -293,8 +303,7 @@ namespace ZoppaLauncher
             }
         }
 
-
-        private void cellControl_MovingIcon(object sender, EventArgs e)
+        public void MouseMoving()
         {
             try {
                 if (this.infoPop.IsOpen) {
@@ -306,20 +315,49 @@ namespace ZoppaLauncher
             }
         }
 
-        private void cellControl_StayIcon(object sender, CellInformation infoCell)
+        public void MouseStay(FrameworkElement element)
         {
             try {
-                if (infoCell.HasLink) {
-                    this.infoPop.PlacementTarget = this.SearchParentElement(sender);
+                CellInformation? info = element.DataContext as CellInformation;
+                if (info?.HasLink ?? false) {
+                    this.infoPop.PlacementTarget = this.SearchParentElement(element);
                     this.infoPop.Placement = PlacementMode.Top;
                     this.infoPop.IsOpen = true;
-                    this.infoPop.DataContext = infoCell;
+                    this.infoPop.DataContext = info;
                 }
             }
             catch (Exception ex) {
                 this._logger?.WriteErrorLog(this, ex);
             }
         }
+
+
+        //private void cellControl_MovingIcon(object sender, EventArgs e)
+        //{
+        //    try {
+        //        if (this.infoPop.IsOpen) {
+        //            this.infoPop.IsOpen = false;
+        //        }
+        //    }
+        //    catch (Exception ex) {
+        //        this._logger?.WriteErrorLog(this, ex);
+        //    }
+        //}
+
+        //private void cellControl_StayIcon(object sender, CellInformation infoCell)
+        //{
+        //    try {
+        //        if (infoCell.HasLink) {
+        //            this.infoPop.PlacementTarget = this.SearchParentElement(sender);
+        //            this.infoPop.Placement = PlacementMode.Top;
+        //            this.infoPop.IsOpen = true;
+        //            this.infoPop.DataContext = infoCell;
+        //        }
+        //    }
+        //    catch (Exception ex) {
+        //        this._logger?.WriteErrorLog(this, ex);
+        //    }
+        //}
 
         private UIElement? SearchParentElement(object sender)
         {

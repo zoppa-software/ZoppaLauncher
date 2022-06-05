@@ -127,8 +127,7 @@
             HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             ScrollViewer.VerticalScrollBarVisibility="Disabled" 
-            DropLinkFile="cellControl_DropLinkFile" MoveIcon="cellControl_MoveIcon" 
-            RemoveIcon="cellControl_RemoveIcon" MouseMovingIcon="cellControl_MovingIcon" MouseStayIcon="cellControl_StayIcon">
+            DropLinkFile="cellControl_DropLinkFile" MoveIcon="cellControl_MoveIcon" RemoveIcon="cellControl_RemoveIcon">
 
             <!-- 枠のテンプレートデザイン -->
             <Views:IconItemControl.Template>
