@@ -61,7 +61,7 @@ namespace ZoppaLauncher.Views
         private Point? _clickPoint;
 
         // ログ出力機能
-        private ILogWriter? _logger;
+        private ILogWriter? _logger = null;
 
         /// <summary>コンストラクタ。</summary>
         public IconItemControl() : base()
@@ -70,14 +70,14 @@ namespace ZoppaLauncher.Views
             this._dragGhost = null;
             this._layer = null;
             this._clickPoint = null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void LoadLogger()
+        {
             this._logger = (App.Current as App)?.DiProvider?.GetService<ILogWriter>();
-            //this._stayTimer = new DispatcherTimer();
-            //this._stayTimer.Tick += new EventHandler(StayTimer_Tick);
-            //this._stayTimer.Interval = TimeSpan.FromMilliseconds(100);
-            //this._stayTimer.Start();
-            //this._stayed = false;
-            //this._stayTime = DateTime.MinValue;
-            //this._stayPoint = new Point(-10000, -10000);
         }
 
         /// <summary>マウス押下イベントです。</summary>

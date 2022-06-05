@@ -71,9 +71,11 @@ namespace ZoppaLauncher
 
             try {
                 this._logger?.WriteLog(this, "start");
+                this.cellControl.LoadLogger();
 
                 this.Opacity = 0;
 
+                //
                 this._iconSetting = await this.LoadSettingFile();
                 if (this._iconSetting != null) {
                     this._logger?.WriteLog(this, "load setting");
@@ -197,13 +199,6 @@ namespace ZoppaLauncher
         private async void IconFrame_MouseUp(object sender, MouseButtonEventArgs e)
         {
             try {
-                if (this.cellMenuPop.IsOpen) {
-                    this.cellMenuPop.IsOpen = false;
-                }
-                if (this.infoPop.IsOpen) {
-                    this.infoPop.IsOpen = false;
-                }
-
                 if (this.cellControl.IsSelectedIcon &&
                     this.cellControl.StayMousePosition(e.GetPosition(this.cellControl))) {
                     var icon = (e.Source as FrameworkElement)?.DataContext as CellInformation;
@@ -221,6 +216,13 @@ namespace ZoppaLauncher
                                     System.Threading.Thread.Sleep(100);
                                 }
                             });
+
+                            if (this.cellMenuPop.IsOpen) {
+                                this.cellMenuPop.IsOpen = false;
+                            }
+                            if (this.infoPop.IsOpen) {
+                                this.infoPop.IsOpen = false;
+                            }
 
                             var linkInfo = new ProcessStartInfo();
                             linkInfo.FileName = icon.LinkPath;
@@ -330,34 +332,6 @@ namespace ZoppaLauncher
                 this._logger?.WriteErrorLog(this, ex);
             }
         }
-
-
-        //private void cellControl_MovingIcon(object sender, EventArgs e)
-        //{
-        //    try {
-        //        if (this.infoPop.IsOpen) {
-        //            this.infoPop.IsOpen = false;
-        //        }
-        //    }
-        //    catch (Exception ex) {
-        //        this._logger?.WriteErrorLog(this, ex);
-        //    }
-        //}
-
-        //private void cellControl_StayIcon(object sender, CellInformation infoCell)
-        //{
-        //    try {
-        //        if (infoCell.HasLink) {
-        //            this.infoPop.PlacementTarget = this.SearchParentElement(sender);
-        //            this.infoPop.Placement = PlacementMode.Top;
-        //            this.infoPop.IsOpen = true;
-        //            this.infoPop.DataContext = infoCell;
-        //        }
-        //    }
-        //    catch (Exception ex) {
-        //        this._logger?.WriteErrorLog(this, ex);
-        //    }
-        //}
 
         private UIElement? SearchParentElement(object sender)
         {
