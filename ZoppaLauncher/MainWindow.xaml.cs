@@ -41,6 +41,7 @@ namespace ZoppaLauncher
 
         private bool _hitAnimaflg;
 
+
         public MainWindow()
         {
             this._cellCollection = new LauncherForm();
@@ -229,8 +230,7 @@ namespace ZoppaLauncher
                             linkInfo.UseShellExecute = true;
                             Process.Start(linkInfo);
 
-                            this.Hide();
-                            this.cellControl.ClearCellInformation();
+                            this.HideWindow();
                         }
                     }
                 }
@@ -248,11 +248,17 @@ namespace ZoppaLauncher
         private void hiddenBtn_Click(object sender, RoutedEventArgs e)
         {
             try {
-                this.Hide();
+                this.HideWindow();
             }
             catch (Exception ex) {
                 Debug.WriteLine($"{nameof(this.hiddenBtn_Click)}:{ex.ToString()}");
             }
+        }
+
+        private void HideWindow()
+        {
+            this.cellControl.ClearCellInformation();
+            this.Hide();
         }
 
         private async void cellControl_DropLinkFile(object sender, CellInformation toCell, string linkPath)
@@ -321,7 +327,7 @@ namespace ZoppaLauncher
         {
             try {
                 CellInformation? info = element.DataContext as CellInformation;
-                if (info?.HasLink ?? false) {
+                if ((info?.HasLink ?? false) && this.IsVisible) {
                     this.infoPop.PlacementTarget = this.SearchParentElement(element);
                     this.infoPop.Placement = PlacementMode.Top;
                     this.infoPop.IsOpen = true;
@@ -366,17 +372,17 @@ namespace ZoppaLauncher
             var icon = (e.Source as FrameworkElement)?.DataContext as CellInformation;
             try {
                 if (icon?.LinkPath != null) {
+                    this.HideWindow();
+
                     var linkInfo = new ProcessStartInfo();
                     linkInfo.FileName = icon.LinkPath;
                     linkInfo.UseShellExecute = true;
                     linkInfo.Verb = "RunAs";
                     Process.Start(linkInfo);
-
-                    this.Hide();
-                    this.cellControl.ClearCellInformation();
                 }
             }
             catch (Exception ex) {
+                this.Show();
                 Debug.WriteLine($"{nameof(this.AdministrateRun_MouseDown)}:{ex.ToString()}");
             }
         }

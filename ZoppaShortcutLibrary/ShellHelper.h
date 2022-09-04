@@ -5,7 +5,7 @@ namespace ZoppaShortcutLibrary {
 	using namespace System;
 
 	/// <summary>シェルコピーラッパー。</summary>
-	ref class ShellHelper
+	public ref class ShellHelper
 	{
 	public:
 		/// <summary>ファイルコピーを行う。</summary>
